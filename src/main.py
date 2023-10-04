@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import json
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
-from src.exception.error_response_exception import ErrorResponseException
+from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from fastapi.responses import JSONResponse
 
