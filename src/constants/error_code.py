@@ -1,10 +1,10 @@
 def get_error_code(error_code: int, data: str = None):
     if data:
-        message_error = ERROR_CODE.get(error_code, "Error code is not define").replace(
+        message_error = ERROR_CODE.get(error_code, "Error code is not defined").replace(
             "{values}", str(data)
         )
     else:
-        message_error = ERROR_CODE.get(error_code, "Error code is not define")
+        message_error = ERROR_CODE.get(error_code, "Error code is not defined")
     return {
         "success": False,
         "error_code": error_code,
