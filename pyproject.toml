@@ -12,6 +12,7 @@ pre-commit = "^3.4.0"
 motor = "^3.3.1"
 umongo = "^3.1.0"
 pydantic-settings = "^2.0.3"
+minio = "^7.1.17"
 
 
 [build-system]
