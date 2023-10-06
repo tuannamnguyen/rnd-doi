@@ -13,4 +13,4 @@ class MinioSettings(BaseSettings):
         extra = "ignore"
 
 
-minio_settings = MinioSettings(_env_file="src/env/.env")
+minio_settings = MinioSettings(_env_file=".env")

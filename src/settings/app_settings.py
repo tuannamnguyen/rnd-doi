@@ -9,4 +9,4 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 
-app_settings = Settings(_env_file="src/env/.env")
+app_settings = Settings(_env_file=".env")
