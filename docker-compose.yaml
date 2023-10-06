@@ -1,0 +1,24 @@
+services:
+  app:
+    image: tuannamnguyen290602/rnd-doi
+    ports:
+      - 8000:8000
+    env_file:
+      - .env
+    depends_on:
+      - minio
+
+  minio:
+    image: minio/minio
+    volumes:
+      - minio-data:/data
+    ports:
+      - 9000:9000
+      - 9090:9090
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    command: server ~/data --address 0.0.0.0:9000 --console-address 0.0.0.0:9090
+
+volumes:
+  minio-data:
