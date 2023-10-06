@@ -11,8 +11,8 @@ class Order(Document):
 @db_instance.register
 class Menu(Document):
     title = fields.StringField()
-    link = fields.StringField()
-    image = fields.StringField()
+    link = fields.StringField(unique=True)
+    image_name = fields.StringField()
 
     class Meta:
         collection_name = "menu"

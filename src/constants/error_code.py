@@ -13,4 +13,8 @@ def get_error_code(error_code: int, data: str = None):
     }
 
 
-ERROR_CODE = {4000101: "test error code"}
+ERROR_CODE = {
+    4000101: "test error code",
+    4000102: "File's extension is not allowed",
+    5000101: "Failed to upload file",
+}
