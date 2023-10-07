@@ -1,12 +1,16 @@
 import io
+import logging
+from src.constants.logger import CONSOLE_LOGGER_NAME
 from fastapi import UploadFile
 from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
-from src.schemas.order import CreateMenuSchema
-from src.models.order import Menu
+from src.schemas.order import CreateMenuSchema, CreateOrderSchema
+from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
+
+logger = logging.getLogger(CONSOLE_LOGGER_NAME)
 
 
 async def upload_img(img: UploadFile) -> str:
@@ -30,5 +34,30 @@ async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     new_menu = Menu(
         title=request_data.title, link=request_data.link, image_name=img_name
     )
-    await new_menu.commit()
+    try:
+        await new_menu.commit()
+    except Exception as e:
+        logger.error(f"Error when create new menu: {e}")
+        raise ErrorResponseException(**get_error_code(4000105))
+
     return new_menu.dump()
+
+
+async def create_new_order(request_data: CreateOrderSchema):
+    new_order = Order(
+        title=request_data.title,
+        description=request_data.description,
+        menu=request_data.menu,
+        area=request_data.area,
+        share=request_data.share,
+        time_order=request_data.time_order,
+        participants=request_data.participants,
+        item=request_data.item,
+    )
+    try:
+        await new_order.commit()
+    except Exception as e:
+        logger.error(f"Error when create new order: {e}")
+        raise ErrorResponseException(**get_error_code(4000106))
+
+    return new_order.dump()
