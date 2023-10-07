@@ -1,6 +1,7 @@
 import json
 
 from fastapi import Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -24,8 +25,7 @@ def error_response_handler(request: Request, exception: ErrorResponseException):
 def request_validation_error_handler(
     request: Request, exception: RequestValidationError
 ):
-    details = json.loads(exception.json())[0]
-    err_msg = f"{details.get('loc')[-1]} - {details.get('msg')}"
+    err_msg = jsonable_encoder({"detail": exception.errors()})
     return JSONResponse(
         status_code=200,
         content={

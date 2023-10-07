@@ -1,11 +1,9 @@
 from fastapi import APIRouter, UploadFile, Depends, File
-from src.exceptions.error_response_exception import ErrorResponseException
-from src.constants.error_code import get_error_code
 from src.schemas.response import ApiResponse
-from src.schemas.order import CreateMenuSchema
-from src.routers.menu.utils import create_new_menu
+from src.schemas.order import CreateMenuSchema, CreateOrderSchema
+from src.routers.menu.utils import create_new_menu, create_new_order
 
-menu_router = APIRouter(prefix="/menu", tags=["Menu"])
+menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
 
 @menu_router.get("")
@@ -19,4 +17,10 @@ async def create_menu(
     image: UploadFile = File(...),
 ):
     result = await create_new_menu(request_data, image)
+    return {"data": [result]}
+
+
+@menu_router.post("/create_order", response_model=ApiResponse)
+async def create_order(request_data: CreateOrderSchema):
+    result = await create_new_order(request_data)
     return {"data": [result]}
