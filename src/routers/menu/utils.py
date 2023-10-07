@@ -5,8 +5,8 @@ from fastapi import UploadFile
 from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
-from src.schemas.order import CreateMenuSchema, CreateOrderSchema
-from src.models.order import Menu, Order
+from src.schemas.order import CreateMenuSchema, CreateItemSchema, CreateOrderSchema
+from src.models.order import Menu, Item, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 
@@ -32,7 +32,7 @@ async def upload_img(img: UploadFile) -> str:
 async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     img_name = await upload_img(image)
     new_menu = Menu(
-        title=request_data.title, link=request_data.link, image_name=img_name
+        title=request_data.title.lower(), link=request_data.link, image_name=img_name
     )
     try:
         await new_menu.commit()
@@ -43,21 +43,58 @@ async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     return new_menu.dump()
 
 
+async def create_new_item(request_data: CreateItemSchema):
+    if not (await Menu.find_one({"title": request_data.menu})):
+        raise ErrorResponseException(**get_error_code(4000107))
+    new_item = Item(
+        menu=request_data.menu.lower(),
+        name=request_data.name,
+        food=request_data.food,
+        price=request_data.price,
+        quantity=request_data.quantity,
+        total=request_data.quantity * request_data.price,
+    )
+    try:
+        await new_item.commit()
+    except Exception as e:
+        logger.error(f"Error when create new item: {e}")
+        raise ErrorResponseException(**get_error_code(4000108))
+
+    return new_item.dump()
+
+
 async def create_new_order(request_data: CreateOrderSchema):
+    item_list = []
+    for item in request_data.item_list:
+        item_list.append(
+            (
+                await Item.find_one(
+                    {
+                        "menu": item.menu,
+                        "name": item.name,
+                        "food": item.food,
+                        "price": item.price,
+                        "quantity": item.quantity,
+                        "total": item.price * item.quantity,
+                    }
+                )
+            )
+        )
+
     new_order = Order(
         title=request_data.title,
         description=request_data.description,
         menu=request_data.menu,
         area=request_data.area,
         share=request_data.share,
-        time_order=request_data.time_order,
-        participants=request_data.participants,
-        item=request_data.item,
+        order_date=request_data.order_date,
+        item_list=item_list,
     )
+
     try:
         await new_order.commit()
     except Exception as e:
-        logger.error(f"Error when create new order: {e}")
-        raise ErrorResponseException(**get_error_code(4000106))
+        logger.error(f"Error when create order: {e}")
+        raise ErrorResponseException(**get_error_code(4000109))
 
     return new_order.dump()
