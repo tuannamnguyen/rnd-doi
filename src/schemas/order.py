@@ -16,7 +16,7 @@ class CreateMenuSchema(BaseModel):
 
 class CreateItemSchema(BaseModel):
     menu: str
-    name: list[str] = []
+    name: str
     food: str
     price: int
     quantity: int
