@@ -66,20 +66,19 @@ async def create_new_item(request_data: CreateItemSchema):
 async def create_new_order(request_data: CreateOrderSchema):
     item_list = []
     for item in request_data.item_list:
-        item_list.append(
-            (
-                await Item.find_one(
-                    {
-                        "menu": item.menu,
-                        "name": item.name,
-                        "food": item.food,
-                        "price": item.price,
-                        "quantity": item.quantity,
-                        "total": item.price * item.quantity,
-                    }
-                )
-            )
+        order_item = await Item.find_one(
+            {
+                "menu": item.menu,
+                "name": item.name,
+                "food": item.food,
+                "price": item.price,
+                "quantity": item.quantity,
+                "total": item.price * item.quantity,
+            }
         )
+        if not order_item:
+            raise ErrorResponseException(**get_error_code(4000110))
+        item_list.append(order_item)
 
     new_order = Order(
         title=request_data.title,

@@ -15,7 +15,7 @@ class Menu(Document):
 @db_instance.register
 class Item(Document):
     menu = fields.StringField()
-    name = fields.ListField(fields.StringField())
+    name = fields.StringField()
     food = fields.StringField()
     price = fields.IntegerField()
     quantity = fields.IntegerField()
