@@ -2,10 +2,11 @@ import io
 import logging
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from fastapi import UploadFile
+from fastapi.responses import StreamingResponse
 from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
-from src.schemas.order import CreateMenuSchema, CreateItemSchema, CreateOrderSchema
+from src.schemas.order import CreateMenuSchema, GetMenuImageSchema, CreateOrderSchema
 from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
@@ -87,3 +88,31 @@ async def get_menu():
     async for data in result:
         return_data.append(data.dump())
     return return_data
+
+
+async def get_image_of_menu(request_data: GetMenuImageSchema):
+    if not request_data:
+        file_object = io.open("src/data/default_logo.png", "rb", 0)
+        file_extension = "png"
+        return StreamingResponse(
+            file_object,
+            headers={
+                "Content-Disposition": "inline",
+                "Content-type": f"image/{file_extension}",
+                "Cache-Control": "max-age=290304000, public",
+            },
+        )
+    file_extension = request_data.split(".")[-1]
+    if file_extension not in ALLOWED_EXTENSION_IMAGE:
+        raise ErrorResponseException(**get_error_code(4000102))
+    minio_object = await minio_client.get_object(f"/menu/{request_data}")
+    if not minio_object:
+        raise ErrorResponseException(**get_error_code(5000102))
+    return StreamingResponse(
+        minio_object,
+        headers={
+            "Content-Disposition": "inline",
+            "Content-type": f"image/{file_extension}",
+            "Cache-Control": "max-age=290304000, public",
+        },
+    )

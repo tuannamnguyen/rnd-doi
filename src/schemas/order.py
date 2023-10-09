@@ -42,3 +42,7 @@ class CreateOrderSchema(BaseModel):
         if len(v) == 0:
             raise ErrorResponseException(**get_error_code(4000104))
         return v
+
+
+class GetMenuImageSchema(BaseModel):
+    image_name: str
