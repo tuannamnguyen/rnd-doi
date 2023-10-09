@@ -1,5 +1,6 @@
 from src.models.utils import db_instance
 from umongo import Document, fields
+from marshmallow import fields as m_field
 
 
 @db_instance.register
@@ -13,28 +14,22 @@ class Menu(Document):
 
 
 @db_instance.register
-class Item(Document):
-    menu = fields.StringField()
-    name = fields.StringField()
-    food = fields.StringField()
-    price = fields.IntegerField()
-    quantity = fields.IntegerField()
-    total = fields.IntegerField()
-
-    class Meta:
-        collection_name = "item"
-        indexes = [{"key": ("menu", "name"), "unique": True}]
-
-
-@db_instance.register
 class Order(Document):
     title = fields.StringField()
     description = fields.StringField()
+    namesAllowed = fields.StringField()
     menu = fields.StringField()
     area = fields.IntegerField()
     share = fields.BooleanField()
     order_date = fields.DateTimeField()
-    item_list = fields.ListField(fields.ReferenceField("Item"))
+    item_list = fields.ListField(
+        fields.DictField(
+            name=fields.StringField(),
+            food=fields.StringField(),
+            price=fields.IntegerField(),
+        )
+    )
+    tags = fields.ListField(fields.StringField())
 
     class Meta:
         collection_name = "order"

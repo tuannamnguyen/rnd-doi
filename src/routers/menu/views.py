@@ -3,11 +3,9 @@ from src.schemas.response import ApiResponse
 from src.schemas.order import CreateMenuSchema, CreateItemSchema, CreateOrderSchema
 from src.routers.menu.utils import (
     create_new_menu,
-    create_new_item,
     create_new_order,
     get_order,
     get_menu,
-    get_item,
 )
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -19,12 +17,6 @@ async def create_menu(
     image: UploadFile = File(...),
 ):
     result = await create_new_menu(request_data, image)
-    return {"data": [result]}
-
-
-@menu_router.post("/create_item", response_model=ApiResponse)
-async def create_item(request_data: CreateItemSchema):
-    result = await create_new_item(request_data)
     return {"data": [result]}
 
 
@@ -43,10 +35,4 @@ async def get_all_order():
 @menu_router.post("/get_all_menu", response_model=ApiResponse)
 async def get_all_menu():
     result = await get_menu()
-    return {"data": result}
-
-
-@menu_router.post("/get_all_item", response_model=ApiResponse)
-async def get_all_item():
-    result = await get_item()
     return {"data": result}

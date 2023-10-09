@@ -15,21 +15,21 @@ class CreateMenuSchema(BaseModel):
 
 
 class CreateItemSchema(BaseModel):
-    menu: str
     name: str
     food: str
     price: int
-    quantity: int
 
 
 class CreateOrderSchema(BaseModel):
     title: str
     description: str
+    namesAllowed: str
     menu: str
     area: int
     share: bool
     order_date: datetime = datetime.utcnow()
     item_list: list[CreateItemSchema]
+    tags: list[str]
 
     @field_validator("area")
     def validate_area(cls, v: int):
