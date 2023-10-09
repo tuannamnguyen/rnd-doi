@@ -1,11 +1,12 @@
 from fastapi import APIRouter, UploadFile, Depends, File
 from src.schemas.response import ApiResponse
-from src.schemas.order import CreateMenuSchema, CreateItemSchema, CreateOrderSchema
+from src.schemas.order import CreateMenuSchema, CreateOrderSchema, GetMenuImageSchema
 from src.routers.menu.utils import (
     create_new_menu,
     create_new_order,
     get_order,
     get_menu,
+    get_image_of_menu,
 )
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -36,3 +37,9 @@ async def get_all_order():
 async def get_all_menu():
     result = await get_menu()
     return {"data": result}
+
+
+@menu_router.post("/get_menu_image", response_model=ApiResponse)
+async def get_menu_image(request_data: GetMenuImageSchema):
+    result = await get_image_of_menu(request_data.image_name)
+    return result
