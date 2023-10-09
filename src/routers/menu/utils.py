@@ -6,7 +6,7 @@ from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
 from src.schemas.order import CreateMenuSchema, CreateItemSchema, CreateOrderSchema
-from src.models.order import Menu, Item, Order
+from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 
@@ -43,51 +43,23 @@ async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     return new_menu.dump()
 
 
-async def create_new_item(request_data: CreateItemSchema):
-    if not (await Menu.find_one({"title": request_data.menu})):
-        raise ErrorResponseException(**get_error_code(4000107))
-    new_item = Item(
-        menu=request_data.menu.lower(),
-        name=request_data.name,
-        food=request_data.food,
-        price=request_data.price,
-        quantity=request_data.quantity,
-        total=request_data.quantity * request_data.price,
-    )
-    try:
-        await new_item.commit()
-    except Exception as e:
-        logger.error(f"Error when create new item: {e}")
-        raise ErrorResponseException(**get_error_code(4000108))
-
-    return new_item.dump()
-
-
 async def create_new_order(request_data: CreateOrderSchema):
-    item_list = []
-    for item in request_data.item_list:
-        order_item = await Item.find_one(
-            {
-                "menu": item.menu,
-                "name": item.name,
-                "food": item.food,
-                "price": item.price,
-                "quantity": item.quantity,
-                "total": item.price * item.quantity,
-            }
-        )
-        if not order_item:
-            raise ErrorResponseException(**get_error_code(4000110))
-        item_list.append(order_item)
+    current_menu = await Menu.find_one({"title": request_data.menu})
+    if not current_menu:
+        raise ErrorResponseException(**get_error_code(4000107))
+
+    item_list_as_dict = [item.model_dump() for item in request_data.item_list]
 
     new_order = Order(
         title=request_data.title,
         description=request_data.description,
+        namesAllowed=request_data.namesAllowed,
         menu=request_data.menu,
         area=request_data.area,
         share=request_data.share,
         order_date=request_data.order_date,
-        item_list=item_list,
+        item_list=item_list_as_dict,
+        tags=request_data.tags,
     )
 
     try:
@@ -110,15 +82,6 @@ async def get_order():
 
 async def get_menu():
     result = Menu.find({})
-
-    return_data = []
-    async for data in result:
-        return_data.append(data.dump())
-    return return_data
-
-
-async def get_item():
-    result = Item.find({})
 
     return_data = []
     async for data in result:
