@@ -1,9 +1,10 @@
-from src.models.order import Menu
+from src.models.order import Menu, Item
 
 
 async def event_01_ensure_indexes():
     # await Order.ensure_indexes()
     await Menu.ensure_indexes()
+    await Item.ensure_indexes()
 
     print("index_created")
 
