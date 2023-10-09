@@ -23,6 +23,7 @@ class Item(Document):
 
     class Meta:
         collection_name = "item"
+        indexes = [{"key": ("menu", "name"), "unique": True}]
 
 
 @db_instance.register

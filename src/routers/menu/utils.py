@@ -97,3 +97,30 @@ async def create_new_order(request_data: CreateOrderSchema):
         raise ErrorResponseException(**get_error_code(4000109))
 
     return new_order.dump()
+
+
+async def get_order():
+    result = Order.find({})
+
+    return_data = []
+    async for data in result:
+        return_data.append(data.dump())
+    return return_data
+
+
+async def get_menu():
+    result = Menu.find({})
+
+    return_data = []
+    async for data in result:
+        return_data.append(data.dump())
+    return return_data
+
+
+async def get_item():
+    result = Item.find({})
+
+    return_data = []
+    async for data in result:
+        return_data.append(data.dump())
+    return return_data
