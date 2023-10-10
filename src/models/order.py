@@ -1,6 +1,5 @@
 from src.models.utils import db_instance
 from umongo import Document, fields
-from marshmallow import fields as m_field
 
 
 @db_instance.register
