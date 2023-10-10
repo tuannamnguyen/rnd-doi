@@ -6,7 +6,12 @@ from fastapi.responses import StreamingResponse
 from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
-from src.schemas.order import CreateMenuSchema, GetMenuImageSchema, CreateOrderSchema
+from src.schemas.order import (
+    CreateMenuSchema,
+    GetMenuImageSchema,
+    CreateOrderSchema,
+    AddNewItemSchema,
+)
 from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
@@ -116,3 +121,32 @@ async def get_image_of_menu(request_data: GetMenuImageSchema):
             "Cache-Control": "max-age=290304000, public",
         },
     )
+
+
+async def add_new_item_to_order(request_data: AddNewItemSchema):
+    current_order = await Order.find_one(
+        {
+            "title": request_data.order.title,
+            "description": request_data.order.description,
+            "namesAllowed": request_data.order.namesAllowed,
+            "menu": request_data.order.menu,
+            "area": request_data.order.area,
+            "share": request_data.order.share,
+            "order_date": request_data.order.order_date,
+            "item_list": request_data.order.item_list,
+            "tags": request_data.order.tags,
+        }
+    )
+
+    if not current_order:
+        raise ErrorResponseException(**get_error_code(4000111))
+
+    current_item_list = current_order.item_list
+
+    for item in request_data.new_item:
+        current_item_list.append(item.model_dump())
+
+    current_order.update({"item_list": current_item_list})
+    await current_order.commit()
+
+    return current_order.dump()

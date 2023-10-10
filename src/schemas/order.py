@@ -47,3 +47,8 @@ class CreateOrderSchema(BaseModel):
 
 class GetMenuImageSchema(BaseModel):
     image_name: str
+
+
+class AddNewItemSchema(BaseModel):
+    new_item: list[CreateItemSchema]
+    order: CreateOrderSchema
