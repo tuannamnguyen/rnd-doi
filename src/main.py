@@ -8,6 +8,7 @@ from src.exceptions.exception_handler import (
     request_validation_error_handler,
 )
 from src.routers.menu.views import menu_router
+from src.routers.users.views import user_router
 from src.events.startup import events as startup_events
 
 app = FastAPI(on_startup=startup_events)
@@ -16,6 +17,7 @@ app.add_exception_handler(ErrorResponseException, error_response_handler)
 app.add_exception_handler(RequestValidationError, request_validation_error_handler)
 
 app.include_router(menu_router)
+app.include_router(user_router)
 
 
 @app.get("/")
