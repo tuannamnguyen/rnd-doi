@@ -34,4 +34,9 @@ def create_access_token(data: dict, expires_delta: float | None = None):
         expire = time.time() + 900
     to_encode.update({"exp": expire})
     encoded_token = jwt.encode(to_encode, JWT_SECRET, JWT_ALGORITHM)
-    return {"access_token": encoded_token, "token_type": "bearer"}
+    return {
+        "access_token": encoded_token,
+        "token_type": "bearer",
+        "fullname": data["fullname"],
+        "username": data["username"],
+    }

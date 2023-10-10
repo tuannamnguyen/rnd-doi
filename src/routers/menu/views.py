@@ -1,12 +1,18 @@
 from fastapi import APIRouter, UploadFile, Depends, File
 from src.schemas.response import ApiResponse
-from src.schemas.order import CreateMenuSchema, CreateOrderSchema, GetMenuImageSchema
+from src.schemas.order import (
+    CreateMenuSchema,
+    CreateOrderSchema,
+    GetMenuImageSchema,
+    AddNewItemSchema,
+)
 from src.routers.menu.utils import (
     create_new_menu,
     create_new_order,
     get_order,
     get_menu,
     get_image_of_menu,
+    add_new_item_to_order,
 )
 
 from src.auth.auth_bearer import jwt_validator
@@ -56,3 +62,11 @@ async def get_all_menu():
 async def get_menu_image(request_data: GetMenuImageSchema):
     result = await get_image_of_menu(request_data.image_name)
     return result
+
+
+@menu_router.post(
+    "/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def add_new_item(request_data: AddNewItemSchema):
+    result = await add_new_item_to_order(request_data)
+    return {"data": result}
