@@ -113,14 +113,7 @@ async def get_image_of_menu(request_data: GetMenuImageSchema):
     minio_object = await minio_client.get_object(f"/menu/{request_data}")
     if not minio_object:
         raise ErrorResponseException(**get_error_code(5000102))
-    return StreamingResponse(
-        minio_object,
-        headers={
-            "Content-Disposition": "inline",
-            "Content-type": f"image/{file_extension}",
-            "Cache-Control": "max-age=290304000, public",
-        },
-    )
+    return StreamingResponse(io.BytesIO(minio_object.read()))
 
 
 async def add_new_item_to_order(request_data: AddNewItemSchema):
