@@ -18,12 +18,13 @@ class CreateItemSchema(BaseModel):
     name: str
     food: str
     price: int
+    quantity: int
 
 
 class CreateOrderSchema(BaseModel):
     title: str
     description: str
-    namesAllowed: str
+    namesAllowed: list[str]
     menu: str
     area: int
     share: bool
@@ -37,11 +38,11 @@ class CreateOrderSchema(BaseModel):
             raise ErrorResponseException(**get_error_code(4000103))
         return v
 
-    @field_validator("item_list")
-    def validate_item_list(cls, v: list[CreateItemSchema]):
-        if len(v) == 0:
-            raise ErrorResponseException(**get_error_code(4000104))
-        return v
+    # @field_validator("item_list")
+    # def validate_item_list(cls, v: list[CreateItemSchema]):
+    #     if len(v) == 0:
+    #         raise ErrorResponseException(**get_error_code(4000104))
+    #     return v
 
 
 class GetMenuImageSchema(BaseModel):

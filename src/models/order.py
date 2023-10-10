@@ -16,7 +16,7 @@ class Menu(Document):
 class Order(Document):
     title = fields.StringField()
     description = fields.StringField()
-    namesAllowed = fields.StringField()
+    namesAllowed = fields.ListField(fields.StringField())
     menu = fields.StringField()
     area = fields.IntegerField()
     share = fields.BooleanField()
@@ -26,6 +26,7 @@ class Order(Document):
             name=fields.StringField(),
             food=fields.StringField(),
             price=fields.IntegerField(),
+            quantity=fields.IntegerField(),
         )
     )
     tags = fields.ListField(fields.StringField())
