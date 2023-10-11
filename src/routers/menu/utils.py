@@ -12,6 +12,8 @@ from src.schemas.order import (
     CreateOrderSchema,
     AddNewItemSchema,
 )
+
+from datetime import datetime, timedelta
 from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
@@ -63,7 +65,7 @@ async def create_new_order(request_data: CreateOrderSchema):
         menu=request_data.menu,
         area=request_data.area,
         share=request_data.share,
-        order_date=request_data.order_date,
+        order_date=datetime.utcnow(),
         item_list=item_list_as_dict,
         tags=request_data.tags,
     )
@@ -95,7 +97,7 @@ async def get_menu():
     return return_data
 
 
-async def get_image_of_menu(request_data: GetMenuImageSchema):
+async def get_image_of_menu(request_data: str):
     if not request_data:
         file_object = io.open("src/data/default_logo.png", "rb", 0)
         file_extension = "png"
@@ -110,10 +112,10 @@ async def get_image_of_menu(request_data: GetMenuImageSchema):
     file_extension = request_data.split(".")[-1]
     if file_extension not in ALLOWED_EXTENSION_IMAGE:
         raise ErrorResponseException(**get_error_code(4000102))
-    minio_object = await minio_client.get_object(f"/menu/{request_data}")
-    if not minio_object:
+    minio_url = await minio_client.get_url(f"/menu/{request_data}")
+    if not minio_url:
         raise ErrorResponseException(**get_error_code(5000102))
-    return StreamingResponse(io.BytesIO(minio_object.read()))
+    return minio_url
 
 
 async def add_new_item_to_order(request_data: AddNewItemSchema):

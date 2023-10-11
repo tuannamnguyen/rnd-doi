@@ -61,7 +61,7 @@ async def get_all_menu():
 )
 async def get_menu_image(request_data: GetMenuImageSchema):
     result = await get_image_of_menu(request_data.image_name)
-    return result
+    return {"data": [result]}
 
 
 @menu_router.post(
@@ -69,4 +69,4 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 )
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
-    return {"data": result}
+    return {"data": [result]}

@@ -17,6 +17,7 @@ class Order(Document):
     title = fields.StringField()
     description = fields.StringField()
     namesAllowed = fields.ListField(fields.StringField())
+    owner = fields.StringField()
     menu = fields.StringField()
     area = fields.IntegerField()
     share = fields.BooleanField()
