@@ -1,8 +1,12 @@
 from typing import Annotated
-
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordRequestForm
+from src.constants.error_code import get_error_code
+from src.exceptions.error_response_exception import ErrorResponseException
+from src.constants.logger import CONSOLE_LOGGER_NAME
+
 
 from src.auth.auth_bearer import jwt_validator
 from src.auth.auth_handler import (
@@ -15,6 +19,7 @@ from src.schemas.users import UserSchema
 from marshmallow.exceptions import ValidationError
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
+logger = logging.getLogger(CONSOLE_LOGGER_NAME)
 
 
 @user_router.get(
@@ -31,11 +36,13 @@ async def user_signup(user: UserSchema):
         new_user_model = User(**user)
         # Insert hashed password into DB
         new_user_model.password = get_password_hash(user["password"])
-        await User.ensure_indexes()
         await new_user_model.commit()
         return new_user_model.dump()
     except ValidationError as e:
-        return str(e)
+        logger.error(f"Fail to create new user: {e}")
+        raise ErrorResponseException(**get_error_code(4000112))
+    except Exception:
+        raise ErrorResponseException(**get_error_code(4000112))
 
 
 @user_router.post("/login", status_code=status.HTTP_200_OK)

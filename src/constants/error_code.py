@@ -25,6 +25,7 @@ ERROR_CODE = {
     4000109: "Fail to create order",
     4000110: "Item does not exist",
     4000111: "Order does not exist",
+    4000112: "Fail to create new user",
     5000101: "Failed to upload file",
     5000102: "Failed to get file",
 }
