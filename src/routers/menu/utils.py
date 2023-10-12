@@ -128,9 +128,9 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
             "menu": request_data.order.menu,
             "area": request_data.order.area,
             "share": request_data.order.share,
-            "order_date": request_data.order.order_date,
-            "item_list": request_data.order.item_list,
+            # "item_list": request_data.order.item_list,
             "tags": request_data.order.tags,
+            "owner": request_data.order.owner,
         }
     )
 
