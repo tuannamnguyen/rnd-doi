@@ -65,6 +65,7 @@ async def create_new_order(request_data: CreateOrderSchema):
         menu=request_data.menu,
         area=request_data.area,
         share=request_data.share,
+        owner=request_data.owner,
         order_date=datetime.utcnow(),
         item_list=item_list_as_dict,
         tags=request_data.tags,
@@ -127,9 +128,9 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
             "menu": request_data.order.menu,
             "area": request_data.order.area,
             "share": request_data.order.share,
-            "order_date": request_data.order.order_date,
-            "item_list": request_data.order.item_list,
+            # "item_list": request_data.order.item_list,
             "tags": request_data.order.tags,
+            "owner": request_data.order.owner,
         }
     )
 
