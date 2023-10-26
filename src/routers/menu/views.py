@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Depends, File
+from fastapi import APIRouter, UploadFile, Depends, File, status
 from src.schemas.response import ApiResponse
 from src.schemas.order import (
     CreateMenuSchema,
@@ -16,7 +16,7 @@ from src.routers.menu.utils import (
 )
 
 from src.auth.auth_bearer import jwt_validator
-
+from src.models.order import Menu, Order
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
@@ -70,3 +70,27 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
     return {"data": [result]}
+
+
+@menu_router.delete(
+    "/{title}", dependencies=[Depends(jwt_validator)], status_code=status.HTTP_200_OK
+)
+async def delete_menu_by_title(title: str) -> dict:
+    menu = await Menu.find_one({"title": title})
+    if menu is not None:
+        await Menu.collection.delete_one({"title": title})
+        return menu.dump()
+    raise HTTPException(status_code=404, detail=f"Menu {title} not found")
+
+
+@menu_router.delete(
+    "/delete_order/{title}",
+    dependencies=[Depends(jwt_validator)],
+    status_code=status.HTTP_200_OK,
+)
+async def delete_order_by_title(title: str) -> dict:
+    order = await Order.find_one({"title": title})
+    if order is not None:
+        await Order.collection.delete_one({"title": title})
+        return order.dump()
+    raise HTTPException(status_code=404, detail=f"Order {title} not found")

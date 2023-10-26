@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.constants.error_code import get_error_code
 from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.logger import CONSOLE_LOGGER_NAME
-
-
+from src.models.order import Menu
+from src.schemas.response import ApiResponse
 from src.auth.auth_bearer import jwt_validator
 from src.auth.auth_handler import (
     authenticate_user,
@@ -71,3 +71,16 @@ async def delete_user_by_username(username: str) -> dict:
         await User.collection.delete_one({"username": username})
         return user.dump()
     raise HTTPException(status_code=404, detail=f"User {username} not found")
+
+
+@user_router.post(
+    "/get_all_user", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_all_user():
+    result = User.find({})
+
+    return_data = []
+    async for data in result:
+        return_data.append(data.dump())
+
+    return {"data": return_data}

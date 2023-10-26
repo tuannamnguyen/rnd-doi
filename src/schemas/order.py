@@ -31,6 +31,7 @@ class CreateOrderSchema(BaseModel):
     share: bool
     item_list: list[CreateItemSchema]
     tags: list[str]
+    order_date: str
 
     @field_validator("area")
     def validate_area(cls, v: int):
