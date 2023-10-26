@@ -66,7 +66,8 @@ async def create_new_order(request_data: CreateOrderSchema):
         area=request_data.area,
         share=request_data.share,
         owner=request_data.owner,
-        order_date=datetime.utcnow(),
+        # order_date=datetime.utcnow(),
+        order_date=request_data.order_date,
         item_list=item_list_as_dict,
         tags=request_data.tags,
     )
