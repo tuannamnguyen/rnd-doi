@@ -17,9 +17,30 @@ from datetime import datetime, timedelta
 from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
-
+import cloudinary
+import cloudinary.uploader
+          
+cloudinary.config( 
+  cloud_name = "dsij6mntp", 
+  api_key = "189381149557242", 
+  api_secret = "f1Wq2eqAXeZqmI9ubM9cAc989mo" 
+)
 logger = logging.getLogger(CONSOLE_LOGGER_NAME)
 
+
+async def upload_img_v1(img: UploadFile) -> str:
+    file_name = ""
+    if img:
+        print(f'img.file: {img.file}')
+        file_extension = img.filename.split(".")[-1]
+        if file_extension not in ALLOWED_EXTENSION_IMAGE:
+            raise ErrorResponseException(**get_error_code(4000102))
+        upload_result = cloudinary.uploader.upload(img.file, folder='scc-doi')
+        print(f'pass step upload')
+        if not upload_result :
+            raise ErrorResponseException(**get_error_code(5000101))
+        print(f'upload_result: {upload_result}')
+    return upload_result 
 
 async def upload_img(img: UploadFile) -> str:
     file_name = ""
@@ -38,9 +59,10 @@ async def upload_img(img: UploadFile) -> str:
 
 
 async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
-    img_name = await upload_img(image)
+    # img_name = await upload_img(image)
+    img_url = await upload_img_v1(image)
     new_menu = Menu(
-        title=request_data.title.lower(), link=request_data.link, image_name=img_name
+        title=request_data.title.lower(), link=request_data.link, image_name=img_url
     )
     try:
         await new_menu.commit()

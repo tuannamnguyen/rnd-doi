@@ -22,6 +22,14 @@ menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
 
 @menu_router.post(
+    "/up_image", response_model=ApiResponse
+)
+async def up_image(image: UploadFile = File(...)):
+    from src.routers.menu.utils import upload_img_v1
+    result = await upload_img_v1(image)
+    return {"data": []}
+
+@menu_router.post(
     "/create_menu", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def create_menu(
