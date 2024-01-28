@@ -8,39 +8,37 @@ from src.constants.error_code import get_error_code
 from src.constants.image import ALLOWED_EXTENSION_IMAGE
 from src.schemas.order import (
     CreateMenuSchema,
-    GetMenuImageSchema,
     CreateOrderSchema,
     AddNewItemSchema,
 )
 
-from datetime import datetime, timedelta
 from src.models.order import Menu, Order
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
 import cloudinary.uploader
-          
-cloudinary.config( 
-  cloud_name = "dsij6mntp", 
-  api_key = "189381149557242", 
-  api_secret = "f1Wq2eqAXeZqmI9ubM9cAc989mo" 
+
+cloudinary.config(
+    cloud_name="dsij6mntp",
+    api_key="189381149557242",
+    api_secret="f1Wq2eqAXeZqmI9ubM9cAc989mo",
 )
 logger = logging.getLogger(CONSOLE_LOGGER_NAME)
 
 
 async def upload_img_v1(img: UploadFile) -> str:
-    file_name = ""
     if img:
-        print(f'img.file: {img.file}')
+        print(f"img.file: {img.file}")
         file_extension = img.filename.split(".")[-1]
         if file_extension not in ALLOWED_EXTENSION_IMAGE:
             raise ErrorResponseException(**get_error_code(4000102))
-        upload_result = cloudinary.uploader.upload(img.file, folder='scc-doi')
-        print(f'pass step upload')
-        if not upload_result :
+        upload_result = cloudinary.uploader.upload(img.file, folder="scc-doi")
+        print("pass step upload")
+        if not upload_result:
             raise ErrorResponseException(**get_error_code(5000101))
-        print(f'upload_result: {upload_result}')
-    return upload_result 
+        print(f"upload_result: {upload_result}")
+    return upload_result
+
 
 async def upload_img(img: UploadFile) -> str:
     file_name = ""
@@ -59,18 +57,17 @@ async def upload_img(img: UploadFile) -> str:
 
 
 async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
-    # img_name = await upload_img(image)
     img_url = await upload_img_v1(image)
     new_menu = Menu(
         title=request_data.title.lower(), link=request_data.link, image_name=img_url
     )
     try:
-        await new_menu.commit()
+        await new_menu.insert()
     except Exception as e:
         logger.error(f"Error when create new menu: {e}")
         raise ErrorResponseException(**get_error_code(4000105))
 
-    return new_menu.dump()
+    return new_menu.model_dump()
 
 
 async def create_new_order(request_data: CreateOrderSchema):
@@ -88,36 +85,35 @@ async def create_new_order(request_data: CreateOrderSchema):
         area=request_data.area,
         share=request_data.share,
         owner=request_data.owner,
-        # order_date=datetime.utcnow(),
         order_date=request_data.order_date,
         item_list=item_list_as_dict,
         tags=request_data.tags,
     )
 
     try:
-        await new_order.commit()
+        await new_order.insert()
     except Exception as e:
         logger.error(f"Error when create order: {e}")
         raise ErrorResponseException(**get_error_code(4000109))
 
-    return new_order.dump()
+    return new_order.model_dump()
 
 
 async def get_order():
-    result = Order.find({})
+    result = Order.find_all()
 
     return_data = []
     async for data in result:
-        return_data.append(data.dump())
+        return_data.append(data.model_dump())
     return return_data
 
 
 async def get_menu():
-    result = Menu.find({})
+    result = Menu.find_all()
 
     return_data = []
     async for data in result:
-        return_data.append(data.dump())
+        return_data.append(data.model_dump())
     return return_data
 
 
@@ -151,7 +147,6 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
             "menu": request_data.order.menu,
             "area": request_data.order.area,
             "share": request_data.order.share,
-            # "item_list": request_data.order.item_list,
             "tags": request_data.order.tags,
             "owner": request_data.order.owner,
         }
@@ -165,7 +160,6 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
     for item in request_data.new_item:
         current_item_list.append(item.model_dump())
 
-    current_order.update({"item_list": current_item_list})
-    await current_order.commit()
+    current_order.update({"$set": {"item_list": current_item_list}})
 
-    return current_order.dump()
+    return current_order.model_dump()

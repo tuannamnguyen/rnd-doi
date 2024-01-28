@@ -1,13 +1,10 @@
-from umongo import Document, fields
-
-from src.models.utils import db_instance
+from beanie import Document, Indexed
 
 
-@db_instance.register
 class User(Document):
-    fullname = fields.StringField(required=True)
-    username = fields.StringField(unique=True, required=True)
-    password = fields.StringField(required=True)
+    fullname: str
+    username: Indexed(str, unique=True)
+    password: str
 
-    class Meta:
-        collection_name = "users"
+    class Settings:
+        name = "users"

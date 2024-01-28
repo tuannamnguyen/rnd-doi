@@ -32,23 +32,25 @@ async def get_all_users():
 @user_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def user_signup(user: UserSchema):
     try:
-        user = jsonable_encoder(user)
-        new_user_model = User(**user)
+        new_user_model = User(
+            fullname=user.fullname, username=user.username, password=user.password
+        )
         # Insert hashed password into DB
-        new_user_model.password = get_password_hash(user["password"])
-        await new_user_model.commit()
-        return new_user_model.dump()
+        new_user_model.password = get_password_hash(user.password)
+        await new_user_model.insert()
+        return new_user_model.model_dump()
     except ValidationError as e:
         logger.error(f"Fail to create new user: {e}")
         raise ErrorResponseException(**get_error_code(4000112))
-    except Exception:
+    except Exception as e:
+        logger.error(f"Fail to create new user: {e}")
         raise ErrorResponseException(**get_error_code(4000112))
 
 
 @user_router.post("/login", status_code=status.HTTP_200_OK)
 async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user_in_db = await User.find_one({"username": form_data.username})
-    user_in_db = user_in_db.dump()
+    user_in_db = await User.find_one(User.username == form_data.username)
+    user_in_db = user_in_db.model_dump()
     if user_in_db:
         authenticated = authenticate_user(user_in_db, form_data.password)
         if not authenticated:
@@ -68,8 +70,8 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
 async def delete_user_by_username(username: str) -> dict:
     user = await User.find_one({"username": username})
     if user is not None:
-        await User.collection.delete_one({"username": username})
-        return user.dump()
+        await user.delete()
+        return user.model_dump()
     raise HTTPException(status_code=404, detail=f"User {username} not found")
 
 
@@ -77,10 +79,10 @@ async def delete_user_by_username(username: str) -> dict:
     "/get_all_user", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_all_user():
-    result = User.find({})
+    result = User.find_all()
 
     return_data = []
     async for data in result:
-        return_data.append(data.dump())
+        return_data.append(data.model_dump())
 
     return {"data": return_data}
