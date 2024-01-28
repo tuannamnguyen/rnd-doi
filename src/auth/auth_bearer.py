@@ -2,20 +2,16 @@ import time
 from typing import Annotated
 
 import jwt
-import motor.motor_asyncio
 from src.settings.auth_settings import auth_settings
 from src.settings.app_settings import app_settings
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError
+from src.models.users import User
 
 DB_CONNECTION_STRING = app_settings.MONGODB_URL
 JWT_SECRET = auth_settings.SECRET
 JWT_ALGORITHM = auth_settings.ALGORITHM
-
-# Connect to DB
-client = motor.motor_asyncio.AsyncIOMotorClient(DB_CONNECTION_STRING)
-db = client["rnd-doi"]
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
@@ -34,6 +30,6 @@ async def jwt_validator(token: Annotated[str, Depends(oauth2_scheme)]):
             raise credentials_exception
     except PyJWTError:
         raise credentials_exception
-    user = await db.users.find_one({"username": username})
+    user = await User.find_one({"username": username})
     if user is None:
         raise credentials_exception

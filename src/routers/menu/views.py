@@ -21,13 +21,13 @@ from src.models.order import Menu, Order
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
 
-@menu_router.post(
-    "/up_image", response_model=ApiResponse
-)
+@menu_router.post("/up_image", response_model=ApiResponse)
 async def up_image(image: UploadFile = File(...)):
     from src.routers.menu.utils import upload_img_v1
+
     result = await upload_img_v1(image)
     return {"data": []}
+
 
 @menu_router.post(
     "/create_menu", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
@@ -86,9 +86,8 @@ async def add_new_item(request_data: AddNewItemSchema):
 async def delete_menu_by_title(title: str) -> dict:
     menu = await Menu.find_one({"title": title})
     if menu is not None:
-        await Menu.collection.delete_one({"title": title})
-        return menu.dump()
-    raise HTTPException(status_code=404, detail=f"Menu {title} not found")
+        await menu.delete()
+        return menu.model_dump()
 
 
 @menu_router.delete(
@@ -99,6 +98,5 @@ async def delete_menu_by_title(title: str) -> dict:
 async def delete_order_by_title(title: str) -> dict:
     order = await Order.find_one({"title": title})
     if order is not None:
-        await Order.collection.delete_one({"title": title})
-        return order.dump()
-    raise HTTPException(status_code=404, detail=f"Order {title} not found")
+        await order.delete()
+        return order.model_dump()
