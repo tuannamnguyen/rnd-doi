@@ -45,7 +45,6 @@ async def create_menu(
     "/create_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def create_order(request_data: CreateOrderSchema, current_user:str = Depends(get_current_user)):
-    print(current_user)
     result = await create_new_order(request_data, current_user)
     return {"data": [result]}
 
