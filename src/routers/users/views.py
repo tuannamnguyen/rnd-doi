@@ -32,6 +32,8 @@ async def get_all_users():
 @user_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def user_signup(user: UserSchema):
     try:
+        if user.password != user.confirm_password:
+            raise ValidationError("password and confirmation does not match")
         new_user_model = User(
             fullname=user.fullname, username=user.username, password=user.password
         )
