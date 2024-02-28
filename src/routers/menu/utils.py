@@ -70,7 +70,7 @@ async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     return new_menu.model_dump()
 
 
-async def create_new_order(request_data: CreateOrderSchema):
+async def create_new_order(request_data: CreateOrderSchema, current_user: str):
     current_menu = await Menu.find_one({"title": request_data.menu})
     if not current_menu:
         raise ErrorResponseException(**get_error_code(4000107))
@@ -78,6 +78,7 @@ async def create_new_order(request_data: CreateOrderSchema):
     item_list_as_dict = [item.model_dump() for item in request_data.item_list]
 
     new_order = Order(
+        created_by=current_user,
         title=request_data.title,
         description=request_data.description,
         namesAllowed=request_data.namesAllowed,

@@ -33,3 +33,8 @@ async def jwt_validator(token: Annotated[str, Depends(oauth2_scheme)]):
     user = await User.find_one({"username": username})
     if user is None:
         raise credentials_exception
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        username: str = payload.get("username")
+        return username

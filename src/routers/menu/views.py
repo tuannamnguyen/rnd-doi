@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, UploadFile, Depends, File, status
 from src.schemas.response import ApiResponse
 from src.schemas.order import (
@@ -15,7 +16,7 @@ from src.routers.menu.utils import (
     add_new_item_to_order,
 )
 
-from src.auth.auth_bearer import jwt_validator
+from src.auth.auth_bearer import jwt_validator, get_current_user
 from src.models.order import Menu, Order
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -43,8 +44,9 @@ async def create_menu(
 @menu_router.post(
     "/create_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
-async def create_order(request_data: CreateOrderSchema):
-    result = await create_new_order(request_data)
+async def create_order(request_data: CreateOrderSchema, current_user:str = Depends(get_current_user)):
+    print(current_user)
+    result = await create_new_order(request_data, current_user)
     return {"data": [result]}
 
 
