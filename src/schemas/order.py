@@ -24,7 +24,6 @@ class CreateItemSchema(BaseModel):
 class CreateOrderSchema(BaseModel):
     title: str
     description: str
-    owner: str
     namesAllowed: list[str]
     menu: str
     area: int
@@ -53,3 +52,8 @@ class GetMenuImageSchema(BaseModel):
 class AddNewItemSchema(BaseModel):
     new_item: list[CreateItemSchema]
     order: CreateOrderSchema
+
+
+class AddNewItemByOrderIDSchema(BaseModel):
+    order_id: str
+    new_item: list[CreateItemSchema]

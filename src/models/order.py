@@ -21,9 +21,9 @@ class Item(BaseModel):
 
 class Order(Document):
     title: str
+    created_by: str
     description: str
     namesAllowed: list[str]
-    owner: str
     menu: str
     area: int
     share: bool

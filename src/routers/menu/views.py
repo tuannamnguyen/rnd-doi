@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, UploadFile, Depends, File, status
 from src.schemas.response import ApiResponse
 from src.schemas.order import (
@@ -5,6 +6,7 @@ from src.schemas.order import (
     CreateOrderSchema,
     GetMenuImageSchema,
     AddNewItemSchema,
+    AddNewItemByOrderIDSchema,
 )
 from src.routers.menu.utils import (
     create_new_menu,
@@ -13,9 +15,10 @@ from src.routers.menu.utils import (
     get_menu,
     get_image_of_menu,
     add_new_item_to_order,
+    add_new_item_to_order_by_id,
 )
 
-from src.auth.auth_bearer import jwt_validator
+from src.auth.auth_bearer import jwt_validator, get_current_user
 from src.models.order import Menu, Order
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -43,8 +46,8 @@ async def create_menu(
 @menu_router.post(
     "/create_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
-async def create_order(request_data: CreateOrderSchema):
-    result = await create_new_order(request_data)
+async def create_order(request_data: CreateOrderSchema, current_user:str = Depends(get_current_user)):
+    result = await create_new_order(request_data, current_user)
     return {"data": [result]}
 
 
@@ -74,6 +77,13 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 
 @menu_router.post(
     "/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def add_new_item(request_data: AddNewItemByOrderIDSchema):
+    result = await add_new_item_to_order_by_id(request_data)
+    return {"data": [result]}
+
+@menu_router.post(
+    "/add_new_item_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)

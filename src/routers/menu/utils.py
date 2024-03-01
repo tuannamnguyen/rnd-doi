@@ -10,6 +10,7 @@ from src.schemas.order import (
     CreateMenuSchema,
     CreateOrderSchema,
     AddNewItemSchema,
+    AddNewItemByOrderIDSchema
 )
 
 from src.models.order import Menu, Order
@@ -17,6 +18,7 @@ from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
 import cloudinary.uploader
+from bson import ObjectId
 
 cloudinary.config(
     cloud_name="dsij6mntp",
@@ -57,11 +59,14 @@ async def upload_img(img: UploadFile) -> str:
 
 
 async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
-    img_url = await upload_img_v1(image)
+    img_url = await upload_img(image)
     new_menu = Menu(
         title=request_data.title.lower(), link=request_data.link, image_name=img_url
     )
     try:
+        exist_menu = await Menu.find_one({"title":request_data.title.lower()})
+        if exist_menu:
+            raise ValueError("menu already exist")
         await new_menu.insert()
     except Exception as e:
         logger.error(f"Error when create new menu: {e}")
@@ -70,7 +75,7 @@ async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
     return new_menu.model_dump()
 
 
-async def create_new_order(request_data: CreateOrderSchema):
+async def create_new_order(request_data: CreateOrderSchema, current_user: str):
     current_menu = await Menu.find_one({"title": request_data.menu})
     if not current_menu:
         raise ErrorResponseException(**get_error_code(4000107))
@@ -78,13 +83,13 @@ async def create_new_order(request_data: CreateOrderSchema):
     item_list_as_dict = [item.model_dump() for item in request_data.item_list]
 
     new_order = Order(
+        created_by=current_user,
         title=request_data.title,
         description=request_data.description,
         namesAllowed=request_data.namesAllowed,
         menu=request_data.menu,
         area=request_data.area,
         share=request_data.share,
-        owner=request_data.owner,
         order_date=request_data.order_date,
         item_list=item_list_as_dict,
         tags=request_data.tags,
@@ -160,6 +165,30 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
     for item in request_data.new_item:
         current_item_list.append(item.model_dump())
 
-    current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.save()
+
+
+    return current_order.model_dump()
+
+
+async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
+    current_order = await Order.find_one(
+        {
+            "_id" : ObjectId(request_data.order_id)
+        }
+
+    )
+
+    if not current_order:
+        raise ErrorResponseException(**get_error_code(4000111))
+    
+    current_item_list = current_order.item_list
+    for item in request_data.new_item:
+        current_item_list.append(item.model_dump())
+
+    # current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.set({"item_list": current_item_list})
+    await current_order.save()
 
     return current_order.model_dump()
