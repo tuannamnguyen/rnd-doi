@@ -24,7 +24,6 @@ class Order(Document):
     created_by: str
     description: str
     namesAllowed: list[str]
-    owner: str
     menu: str
     area: int
     share: bool

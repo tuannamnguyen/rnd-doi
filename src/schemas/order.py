@@ -24,7 +24,6 @@ class CreateItemSchema(BaseModel):
 class CreateOrderSchema(BaseModel):
     title: str
     description: str
-    owner: str
     namesAllowed: list[str]
     menu: str
     area: int
