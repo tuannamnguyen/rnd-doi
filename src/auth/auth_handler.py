@@ -40,3 +40,17 @@ def create_access_token(data: dict, expires_delta: float | None = None):
         "fullname": data["fullname"],
         "username": data["username"],
     }
+
+def do_refresh_token(token : str | None = None):
+    payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+    
+    payload['exp'] = time.time() + 600
+    encoded_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
+
+    return {
+        "access_token": encoded_token,
+        "token_type": "bearer",
+        "fullname": payload["fullname"],
+        "username": payload["username"],
+    }

@@ -35,6 +35,6 @@ async def jwt_validator(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get("username")
+        acc_info = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        username: str = acc_info.get("username")
         return username

@@ -8,11 +8,12 @@ from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from src.models.order import Menu
 from src.schemas.response import ApiResponse
-from src.auth.auth_bearer import jwt_validator
+from src.auth.auth_bearer import jwt_validator, oauth2_scheme
 from src.auth.auth_handler import (
     authenticate_user,
     create_access_token,
     get_password_hash,
+    do_refresh_token,
 )
 from src.models.users import User
 from src.schemas.users import UserSchema
@@ -64,6 +65,13 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
         expires = 600
         return create_access_token(user_in_db, expires_delta=expires)
     return {"detail": "User not found"}
+
+@user_router.post(
+        "/refesh_token", dependencies=[Depends(jwt_validator)]
+)
+async def refresh_token(token : Annotated[str, Depends(oauth2_scheme)]):
+    
+    return {"detail" : do_refresh_token(token)}
 
 
 @user_router.delete(
