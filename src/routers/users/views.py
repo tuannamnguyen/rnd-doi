@@ -69,7 +69,7 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
 @user_router.post(
         "/refesh_token", dependencies=[Depends(jwt_validator)]
 )
-async def refresh_token(token : Annotated[str, Depends(oauth2_scheme)]):
+async def refresh_token(token : str):
     
     return {"detail" : do_refresh_token(token)}
 
