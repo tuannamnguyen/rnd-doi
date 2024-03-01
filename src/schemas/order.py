@@ -52,3 +52,8 @@ class GetMenuImageSchema(BaseModel):
 class AddNewItemSchema(BaseModel):
     new_item: list[CreateItemSchema]
     order: CreateOrderSchema
+
+
+class AddNewItemByOrderIDSchema(BaseModel):
+    order_id: str
+    new_item: list[CreateItemSchema]

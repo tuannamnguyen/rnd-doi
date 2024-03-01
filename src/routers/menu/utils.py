@@ -10,6 +10,7 @@ from src.schemas.order import (
     CreateMenuSchema,
     CreateOrderSchema,
     AddNewItemSchema,
+    AddNewItemByOrderIDSchema
 )
 
 from src.models.order import Menu, Order
@@ -17,6 +18,7 @@ from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
 import cloudinary.uploader
+from bson import ObjectId
 
 cloudinary.config(
     cloud_name="dsij6mntp",
@@ -164,5 +166,27 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
         current_item_list.append(item.model_dump())
 
     current_order.update({"$set": {"item_list": current_item_list}})
+
+    return current_order.model_dump()
+
+
+async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
+    current_order = await Order.find_one(
+        {
+            "_id" : ObjectId(request_data.order_id)
+        }
+
+    )
+
+    if not current_order:
+        raise ErrorResponseException(**get_error_code(4000111))
+    
+    current_item_list = current_order.item_list
+    for item in request_data.new_item:
+        current_item_list.append(item.model_dump())
+
+    # current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.set({"item_list": current_item_list})
+    await current_order.save()
 
     return current_order.model_dump()

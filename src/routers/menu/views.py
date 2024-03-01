@@ -6,6 +6,7 @@ from src.schemas.order import (
     CreateOrderSchema,
     GetMenuImageSchema,
     AddNewItemSchema,
+    AddNewItemByOrderIDSchema,
 )
 from src.routers.menu.utils import (
     create_new_menu,
@@ -14,6 +15,7 @@ from src.routers.menu.utils import (
     get_menu,
     get_image_of_menu,
     add_new_item_to_order,
+    add_new_item_to_order_by_id,
 )
 
 from src.auth.auth_bearer import jwt_validator, get_current_user
@@ -75,6 +77,13 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 
 @menu_router.post(
     "/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def add_new_item(request_data: AddNewItemByOrderIDSchema):
+    result = await add_new_item_to_order_by_id(request_data)
+    return {"data": [result]}
+
+@menu_router.post(
+    "/add_new_item_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
