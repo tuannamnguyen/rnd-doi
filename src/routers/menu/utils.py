@@ -165,7 +165,9 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
     for item in request_data.new_item:
         current_item_list.append(item.model_dump())
 
-    current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.update({"$set": {"item_list": current_item_list}})
+    await current_order.save()
+
 
     return current_order.model_dump()
 
