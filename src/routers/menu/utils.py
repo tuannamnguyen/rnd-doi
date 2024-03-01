@@ -57,11 +57,14 @@ async def upload_img(img: UploadFile) -> str:
 
 
 async def create_new_menu(request_data: CreateMenuSchema, image: UploadFile):
-    img_url = await upload_img_v1(image)
+    img_url = await upload_img(image)
     new_menu = Menu(
         title=request_data.title.lower(), link=request_data.link, image_name=img_url
     )
     try:
+        exist_menu = await Menu.find_one({"title":request_data.title.lower()})
+        if exist_menu:
+            raise ValueError("menu already exist")
         await new_menu.insert()
     except Exception as e:
         logger.error(f"Error when create new menu: {e}")
