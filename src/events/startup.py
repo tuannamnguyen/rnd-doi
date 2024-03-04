@@ -3,13 +3,13 @@ from beanie import init_beanie
 
 async def event_01_init_db():
     from src.settings.app_settings import app_settings
-    from src.models.order import Menu, Order
+    from src.models.order import Menu, Order, ItemOrder
     from src.models.users import User
     from motor.motor_asyncio import AsyncIOMotorClient
 
     db_instance = AsyncIOMotorClient(app_settings.MONGODB_URL)
     await init_beanie(
-        database=db_instance["rnd-doi"], document_models=[Menu, Order, User]
+        database=db_instance["rnd-doi"], document_models=[Menu, Order, User, ItemOrder]
     )
 
 

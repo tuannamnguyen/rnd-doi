@@ -8,7 +8,7 @@ from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from src.models.order import Menu
 from src.schemas.response import ApiResponse
-from src.auth.auth_bearer import jwt_validator, oauth2_scheme
+from src.auth.auth_bearer import jwt_validator
 from src.auth.auth_handler import (
     authenticate_user,
     create_access_token,
