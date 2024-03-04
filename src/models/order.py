@@ -22,6 +22,7 @@ class Item(BaseModel):
 class Order(Document):
     title: str
     created_by: str
+    created_at : datetime
     description: str
     namesAllowed: list[str]
     menu: str
@@ -32,3 +33,18 @@ class Order(Document):
 
     class Settings:
         name = "order"
+
+
+class ItemOrder(Document):
+    created_at : datetime
+    order_id: str
+    name: str
+    food: str
+    price : int
+    quantity: int
+
+    class Settings:
+        name = "order_detail"
+
+
+

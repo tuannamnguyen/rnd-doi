@@ -1,5 +1,6 @@
 import io
 import logging
+import datetime
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
@@ -13,7 +14,7 @@ from src.schemas.order import (
     AddNewItemByOrderIDSchema
 )
 
-from src.models.order import Menu, Order
+from src.models.order import Menu, Order, ItemOrder
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
@@ -91,12 +92,27 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
         area=request_data.area,
         share=request_data.share,
         order_date=request_data.order_date,
+        created_at=datetime.datetime.now(),
         item_list=item_list_as_dict,
         tags=request_data.tags,
     )
 
     try:
         await new_order.insert()
+        #---------------------[save item to db]-------------------
+        current_item_list = request_data.item_list
+        for item in current_item_list:
+            newitem_db = ItemOrder(
+                created_at=datetime.datetime.now(),
+                order_id=str(new_order.id),
+                food=item.food,
+                name=item.name,
+                price=item.price,
+                quantity=item.quantity
+            )
+        
+        await newitem_db.insert()
+    #---------------------------------------------------------
     except Exception as e:
         logger.error(f"Error when create order: {e}")
         raise ErrorResponseException(**get_error_code(4000109))
@@ -185,10 +201,21 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
     
     current_item_list = current_order.item_list
     for item in request_data.new_item:
+        newitem_db = ItemOrder(
+            created_at=datetime.datetime.now(),
+            order_id=request_data.order_id,
+            food=item.food,
+            name=item.name,
+            price=item.price,
+            quantity=item.quantity
+            )
+        
+        await newitem_db.insert()
         current_item_list.append(item.model_dump())
 
     # current_order.update({"$set": {"item_list": current_item_list}})
     await current_order.set({"item_list": current_item_list})
     await current_order.save()
+    #---
 
     return current_order.model_dump()

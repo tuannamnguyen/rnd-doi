@@ -27,16 +27,40 @@ def authenticate_user(user_in_db: dict, password: str) -> bool:
 
 
 def create_access_token(data: dict, expires_delta: float | None = None):
-    to_encode = {"fullname": data["fullname"], "username": data["username"]}
+    to_encode = {"fullname": data["fullname"], "username": data["username"], "is_refresh_token" : False}
+    to_encode_2 = {"fullname": data["fullname"], "username": data["username"], "is_refresh_token" : True}
     if expires_delta:
         expire = time.time() + expires_delta
     else:
-        expire = time.time() + 900
+        expire = time.time() + 600
     to_encode.update({"exp": expire})
     encoded_token = jwt.encode(to_encode, JWT_SECRET, JWT_ALGORITHM)
+    expire = expire + 60000
+    to_encode.update({"exp": expire})
+    encoded_token_2 = jwt.encode(to_encode_2, JWT_SECRET, JWT_ALGORITHM)
     return {
         "access_token": encoded_token,
+        "refresh_token" : encoded_token_2,
         "token_type": "bearer",
         "fullname": data["fullname"],
         "username": data["username"],
     }
+
+def do_refresh_token(token : str | None = None):
+    payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+    if payload['is_refresh_token'] is True:
+
+        payload['exp'] = time.time() + 600
+        payload['is_refresh_token'] = False
+
+        encoded_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
+
+        return {
+        "access_token": encoded_token,
+        "token_type": "bearer",
+        "fullname": payload["fullname"],
+        "username": payload["username"],
+        }
+    else:
+        raise ValueError("refresh_token invalid !")

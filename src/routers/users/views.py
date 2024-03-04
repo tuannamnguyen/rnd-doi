@@ -13,6 +13,7 @@ from src.auth.auth_handler import (
     authenticate_user,
     create_access_token,
     get_password_hash,
+    do_refresh_token,
 )
 from src.models.users import User
 from src.schemas.users import UserSchema
@@ -64,6 +65,15 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
         expires = 600
         return create_access_token(user_in_db, expires_delta=expires)
     return {"detail": "User not found"}
+
+@user_router.post(
+        "/refesh_token", status_code=status.HTTP_200_OK
+)
+async def refresh_token(token : str):
+    try:
+        return {"detail" : do_refresh_token(token)}
+    except Exception as e:
+        return {"detail" : "refresh token invalid!"}
 
 
 @user_router.delete(
