@@ -215,5 +215,6 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
     # current_order.update({"$set": {"item_list": current_item_list}})
     await current_order.set({"item_list": current_item_list})
     await current_order.save()
+    #---
 
     return current_order.model_dump()
