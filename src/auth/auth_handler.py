@@ -32,7 +32,7 @@ def create_access_token(data: dict, expires_delta: float | None = None):
     if expires_delta:
         expire = time.time() + expires_delta
     else:
-        expire = time.time() + 30
+        expire = time.time() + 600
     to_encode.update({"exp": expire})
     encoded_token = jwt.encode(to_encode, JWT_SECRET, JWT_ALGORITHM)
     expire = expire + 60000

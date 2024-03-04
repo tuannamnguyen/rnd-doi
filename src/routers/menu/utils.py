@@ -83,20 +83,6 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     item_list_as_dict = [item.model_dump() for item in request_data.item_list]
 
-    #---------------------[save item to db]-------------------
-    current_item_list = request_data.item_list
-    for item in current_item_list:
-        newitem_db = ItemOrder(
-            created_at=datetime.datetime.now(),
-            food=item.food,
-            name=item.name,
-            price=item.price,
-            quantity=item.quantity
-            )
-        
-        await newitem_db.insert()
-    #---------------------------------------------------------
-
     new_order = Order(
         created_by=current_user,
         title=request_data.title,
@@ -113,6 +99,20 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     try:
         await new_order.insert()
+        #---------------------[save item to db]-------------------
+        current_item_list = request_data.item_list
+        for item in current_item_list:
+            newitem_db = ItemOrder(
+                created_at=datetime.datetime.now(),
+                order_id=str(new_order.id),
+                food=item.food,
+                name=item.name,
+                price=item.price,
+                quantity=item.quantity
+            )
+        
+        await newitem_db.insert()
+    #---------------------------------------------------------
     except Exception as e:
         logger.error(f"Error when create order: {e}")
         raise ErrorResponseException(**get_error_code(4000109))
@@ -203,6 +203,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
     for item in request_data.new_item:
         newitem_db = ItemOrder(
             created_at=datetime.datetime.now(),
+            order_id=request_data.order_id,
             food=item.food,
             name=item.name,
             price=item.price,

@@ -37,6 +37,7 @@ class Order(Document):
 
 class ItemOrder(Document):
     created_at : datetime
+    order_id: str
     name: str
     food: str
     price : int
