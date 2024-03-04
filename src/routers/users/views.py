@@ -67,11 +67,13 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
     return {"detail": "User not found"}
 
 @user_router.post(
-        "/refesh_token", dependencies=[Depends(jwt_validator)]
+        "/refesh_token", status_code=status.HTTP_200_OK
 )
 async def refresh_token(token : str):
-    
-    return {"detail" : do_refresh_token(token)}
+    try:
+        return {"detail" : do_refresh_token(token)}
+    except Exception as e:
+        return {"detail" : "refresh token invalid!"}
 
 
 @user_router.delete(

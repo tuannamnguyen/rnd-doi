@@ -24,6 +24,8 @@ async def jwt_validator(token: Annotated[str, Depends(oauth2_scheme)]):
     )
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload['is_refresh_token'] is True:
+             raise credentials_exception
         username: str = payload.get("username")
         expire_time: float = payload.get("exp")
         if username is None or expire_time <= time.time():
