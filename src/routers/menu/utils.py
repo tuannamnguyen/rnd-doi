@@ -104,6 +104,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
         for item in current_item_list:
             newitem_db = ItemOrder(
                 created_at=datetime.datetime.now(),
+                created_by=current_user,
                 order_id=str(new_order.id),
                 food=item.food,
                 name=item.name,
@@ -188,7 +189,7 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
     return current_order.model_dump()
 
 
-async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
+async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, current_user : str):
     current_order = await Order.find_one(
         {
             "_id" : ObjectId(request_data.order_id)
@@ -203,6 +204,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema):
     for item in request_data.new_item:
         newitem_db = ItemOrder(
             created_at=datetime.datetime.now(),
+            created_by=current_user,
             order_id=request_data.order_id,
             food=item.food,
             name=item.name,
