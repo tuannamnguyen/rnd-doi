@@ -35,8 +35,12 @@ async def user_signup(user: UserSchema):
     try:
         if user.password != user.confirm_password:
             raise ValidationError("password and confirmation does not match")
+        
+        if user.area != 1 and user.area != 2:
+            raise ValidationError("area not exist !")
         new_user_model = User(
-            fullname=user.fullname, username=user.username, password=user.password
+            fullname=user.fullname, username=user.username, password=user.password,
+            role="user", area=user.area
         )
         # Insert hashed password into DB
         new_user_model.password = get_password_hash(user.password)

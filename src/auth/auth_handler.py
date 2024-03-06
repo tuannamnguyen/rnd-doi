@@ -27,8 +27,8 @@ def authenticate_user(user_in_db: dict, password: str) -> bool:
 
 
 def create_access_token(data: dict, expires_delta: float | None = None):
-    to_encode = {"fullname": data["fullname"], "username": data["username"], "is_refresh_token" : False}
-    to_encode_2 = {"fullname": data["fullname"], "username": data["username"], "is_refresh_token" : True}
+    to_encode = {"fullname": data["fullname"], "username": data["username"], "role":data["role"], "area" : data["area"], "is_refresh_token" : False}
+    to_encode_2 = {"fullname": data["fullname"], "username": data["username"],"role":data["role"], "area" : data["area"], "is_refresh_token" : True}
     if expires_delta:
         expire = time.time() + expires_delta
     else:
@@ -44,6 +44,8 @@ def create_access_token(data: dict, expires_delta: float | None = None):
         "token_type": "bearer",
         "fullname": data["fullname"],
         "username": data["username"],
+        "role":data["role"],
+        "area" : data["area"]
     }
 
 def do_refresh_token(token : str | None = None):
@@ -61,6 +63,8 @@ def do_refresh_token(token : str | None = None):
         "token_type": "bearer",
         "fullname": payload["fullname"],
         "username": payload["username"],
+        "role": payload["role"],
+        "area" : payload["area"]
         }
     else:
         raise ValueError("refresh_token invalid !")
