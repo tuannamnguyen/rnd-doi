@@ -107,7 +107,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
                 created_by=current_user,
                 order_id=str(new_order.id),
                 food=item.food,
-                name=item.name,
+                order_for=item.order_for,
                 price=item.price,
                 quantity=item.quantity
             )
@@ -207,7 +207,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
             created_by=current_user,
             order_id=request_data.order_id,
             food=item.food,
-            name=item.name,
+            order_for=item.order_for,
             price=item.price,
             quantity=item.quantity
             )

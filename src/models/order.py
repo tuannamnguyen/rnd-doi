@@ -13,7 +13,7 @@ class Menu(Document):
 
 
 class Item(BaseModel):
-    name: str
+    order_for: str
     food: str
     price: int
     quantity: int
@@ -39,7 +39,7 @@ class ItemOrder(Document):
     created_at : datetime
     created_by: str
     order_id: str
-    name: str
+    order_for: str
     food: str
     price : int
     quantity: int
