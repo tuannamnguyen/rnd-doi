@@ -14,7 +14,8 @@ from src.schemas.order import (
     AddNewItemByOrderIDSchema
 )
 
-from src.models.order import Menu, Order, ItemOrder
+from src.models.order import Menu, Order, ItemOrder, UserOrder
+from src.models.users import User
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
@@ -99,6 +100,27 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     try:
         await new_order.insert()
+        #----------------------[save allowed user to order]------------
+        current_allowed_name = request_data.namesAllowed
+        for name in current_allowed_name:
+            current = await UserOrder.find_one({"username" : name})
+            if current is not None:
+                cur_order_list = current.allow_order_id_list
+                cur_order_list.append(str(new_order.id))
+                await current.set({"allow_order_id_list" : cur_order_list})
+                await current.save()
+
+            else:
+                new_allow_list: list[str] = []
+                new_allow_list.append(str(new_order.id))
+                
+                new_allow_name = UserOrder(username=name, allow_order_id_list=new_allow_list)
+
+                await new_allow_name.insert()
+
+
+        #-------------------------------------------------------------
+
         #---------------------[save item to db]-------------------
         current_item_list = request_data.item_list
         for item in current_item_list:
@@ -221,3 +243,30 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
     #---
 
     return current_order.model_dump()
+
+
+#--------------[update filter]--------------------
+
+async def get_order_v2(current_user : str):
+    return_data = []
+    con1 = Order.find({"namesAllowed" : None, "created_by" : {"$ne": current_user}})
+    con2 = Order.find({"created_by" : current_user})
+    # { field1: { $elemMatch: { one: 1 } } }
+
+    if con1 is not None:
+        async for data in con1:
+            return_data.append(data.model_dump())
+
+    if con2 is not None:
+        async for data in con2:
+            return_data.append(data.model_dump())
+
+    order_list = await UserOrder.find_one({"username" : current_user})
+    if order_list is not None:
+        alist = order_list.allow_order_id_list
+        for order_id in alist:
+            con3 = await Order.find_one({"_id" : ObjectId(order_id)})
+            if con3 is not None:
+                return_data.append(con3.model_dump())
+    return return_data
+#-------------------------------------------------

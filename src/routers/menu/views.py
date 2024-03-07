@@ -12,6 +12,7 @@ from src.routers.menu.utils import (
     create_new_menu,
     create_new_order,
     get_order,
+    get_order_v2,
     get_menu,
     get_image_of_menu,
     add_new_item_to_order,
@@ -57,6 +58,15 @@ async def create_order(request_data: CreateOrderSchema, current_user:str = Depen
 async def get_all_order():
     result = await get_order()
     return {"data": result}
+
+#-------------------[new get order]------------
+@menu_router.post(
+    "/get_user_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_order_by_user(current_user:str = Depends(get_current_user)):
+    result = await get_order_v2(current_user)
+    return {"data": result}
+#----------------------------------------------
 
 
 @menu_router.post(

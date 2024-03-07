@@ -48,4 +48,12 @@ class ItemOrder(Document):
         name = "order_detail"
 
 
+class UserOrder(Document):
+    username : str
+    allow_order_id_list: list[str]
+    class Settings:
+        name = "user_order"
+
+
+
 
