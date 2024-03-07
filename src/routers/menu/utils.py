@@ -249,7 +249,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
 
 async def get_order_v2(current_user : str):
     return_data = []
-    con1 = Order.find({"namesAllowed" : None, "created_by" : {"$ne": current_user}})
+    con1 = Order.find({"namesAllowed" : []})#, "created_by" : {"$ne": current_user}
     con2 = Order.find({"created_by" : current_user})
     # { field1: { $elemMatch: { one: 1 } } }
 
