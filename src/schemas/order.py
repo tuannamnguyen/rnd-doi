@@ -15,7 +15,7 @@ class CreateMenuSchema(BaseModel):
 
 
 class CreateItemSchema(BaseModel):
-    name: str
+    order_for: str
     food: str
     price: int
     quantity: int

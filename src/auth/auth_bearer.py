@@ -26,6 +26,8 @@ async def jwt_validator(token: Annotated[str, Depends(oauth2_scheme)]):
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         if payload['is_refresh_token'] is True:
              raise credentials_exception
+        if payload['role'] is None:
+             raise credentials_exception
         username: str = payload.get("username")
         expire_time: float = payload.get("exp")
         if username is None or expire_time <= time.time():
@@ -40,3 +42,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         acc_info = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         username: str = acc_info.get("username")
         return username
+
+async def get_current_area(token: Annotated[str, Depends(oauth2_scheme)]):
+        acc_info = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        area: int = acc_info.get("area")
+        return area
