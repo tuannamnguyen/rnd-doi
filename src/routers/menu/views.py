@@ -53,7 +53,7 @@ async def create_order(request_data: CreateOrderSchema, current_user:str = Depen
 
 
 @menu_router.post(
-    "/get_all_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/get_all_order_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_all_order():
     result = await get_order()
@@ -61,7 +61,7 @@ async def get_all_order():
 
 #-------------------[new get order]------------
 @menu_router.post(
-    "/get_user_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/get_all_order_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_order_by_user(current_user:str = Depends(get_current_user)):
     result = await get_order_v2(current_user)
