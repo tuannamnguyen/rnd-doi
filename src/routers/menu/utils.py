@@ -247,9 +247,10 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
 
 #--------------[update filter]--------------------
 
-async def get_order_v2(current_user : str):
+async def get_order_v2(current_user : str, current_area : int):
     return_data = []
-    con1 = Order.find({"namesAllowed" : [], "created_by" : {"$ne": current_user}})#, "created_by" : {"$ne": current_user}
+    con1 = Order.find({"namesAllowed" : ["all"], "area" : current_area, "created_by" : {"$ne": current_user}})
+    #, "created_by" : {"$ne": current_user}
     con2 = Order.find({"created_by" : current_user})
     # { field1: { $elemMatch: { one: 1 } } }
 
@@ -262,11 +263,29 @@ async def get_order_v2(current_user : str):
             return_data.append(data.model_dump())
 
     order_list = await UserOrder.find_one({"username" : current_user})
-    if order_list is not None:
+    if order_list:
         alist = order_list.allow_order_id_list
         for order_id in alist:
             con3 = await Order.find_one({"_id" : ObjectId(order_id)})
-            if con3 is not None:
+            if con3:
                 return_data.append(con3.model_dump())
+
+                
     return return_data
+
+    # if order_list:
+    #     list_order_id = order_list.allow_order_id_list
+    #     # list_con3 = Order.aggregate([])
+    #     # print([ObjectId(order_id) for order_id in list_order_id])
+    #     list_con3 = Order.aggregate([
+    #         {
+    #             '$match': {
+    #                 "id" : {"$in" : [ObjectId(order_id) for order_id in list_order_id]}
+    #                 },
+    #         }
+    #     ])
+    #     async for con3 in list_con3:
+    #         print(con3)
+    #     return []
+    
 #-------------------------------------------------

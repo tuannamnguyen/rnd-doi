@@ -19,7 +19,7 @@ from src.routers.menu.utils import (
     add_new_item_to_order_by_id,
 )
 
-from src.auth.auth_bearer import jwt_validator, get_current_user
+from src.auth.auth_bearer import jwt_validator, get_current_user, get_current_area
 from src.models.order import Menu, Order
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -63,8 +63,8 @@ async def get_all_order():
 @menu_router.post(
     "/get_user_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
-async def get_order_by_user(current_user:str = Depends(get_current_user)):
-    result = await get_order_v2(current_user)
+async def get_order_by_user(current_user:str = Depends(get_current_user), current_area: int = Depends(get_current_area)):
+    result = await get_order_v2(current_user, current_area)
     return {"data": result}
 #----------------------------------------------
 
