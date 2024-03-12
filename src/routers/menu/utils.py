@@ -233,8 +233,10 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
             quantity=item.quantity
             )
         
-        await newitem_db.insert()
-        current_item_list.append(item.model_dump())
+        if newitem_db:
+        
+            await newitem_db.insert()
+            current_item_list.append(item.model_dump())
 
     # current_order.update({"$set": {"item_list": current_item_list}})
     await current_order.set({"item_list": current_item_list})
