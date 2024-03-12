@@ -123,18 +123,19 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
         #---------------------[save item to db]-------------------
         current_item_list = request_data.item_list
-        for item in current_item_list:
-            newitem_db = ItemOrder(
-                created_at=datetime.datetime.now(),
-                created_by=current_user,
-                order_id=str(new_order.id),
-                food=item.food,
-                order_for=item.order_for,
-                price=item.price,
-                quantity=item.quantity
-            )
+        if current_item_list:
+            for item in current_item_list:
+                newitem_db = ItemOrder(
+                    created_at=datetime.datetime.now(),
+                    created_by=current_user,
+                    order_id=str(new_order.id),
+                    food=item.food,
+                    order_for=item.order_for,
+                    price=item.price,
+                    quantity=item.quantity
+                )
         
-        await newitem_db.insert()
+            await newitem_db.insert()
     #---------------------------------------------------------
     except Exception as e:
         logger.error(f"Error when create order: {e}")
@@ -222,19 +223,21 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
         raise ErrorResponseException(**get_error_code(4000111))
     
     current_item_list = current_order.item_list
-    for item in request_data.new_item:
-        newitem_db = ItemOrder(
-            created_at=datetime.datetime.now(),
-            created_by=current_user,
-            order_id=request_data.order_id,
-            food=item.food,
-            order_for=item.order_for,
-            price=item.price,
-            quantity=item.quantity
-            )
+    if len(request_data.new_item)!=0:
+        for item in request_data.new_item:
+            newitem_db = ItemOrder(
+                created_at=datetime.datetime.now(),
+                created_by=current_user,
+                order_id=request_data.order_id,
+                food=item.food,
+                order_for=item.order_for,
+                price=item.price,
+                quantity=item.quantity
+                )
         
-        await newitem_db.insert()
-        current_item_list.append(item.model_dump())
+        
+            await newitem_db.insert()
+            current_item_list.append(item.model_dump())
 
     # current_order.update({"$set": {"item_list": current_item_list}})
     await current_order.set({"item_list": current_item_list})
