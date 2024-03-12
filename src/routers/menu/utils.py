@@ -192,7 +192,6 @@ async def add_new_item_to_order(request_data: AddNewItemSchema):
             "area": request_data.order.area,
             "share": request_data.order.share,
             "tags": request_data.order.tags,
-            "owner": request_data.order.owner,
         }
     )
 
@@ -249,7 +248,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
 
 async def get_order_v2(current_user : str, current_area : int):
     return_data = []
-    con1 = Order.find({"namesAllowed" : ["all"], "area" : current_area, "created_by" : {"$ne": current_user}})
+    con1 = Order.find({"namesAllowed" : [], "area" : current_area, "created_by" : {"$ne": current_user}, "share": True})
     #, "created_by" : {"$ne": current_user}
     con2 = Order.find({"created_by" : current_user})
     # { field1: { $elemMatch: { one: 1 } } }
@@ -266,7 +265,7 @@ async def get_order_v2(current_user : str, current_area : int):
     if order_list:
         alist = order_list.allow_order_id_list
         for order_id in alist:
-            con3 = await Order.find_one({"_id" : ObjectId(order_id)})
+            con3 = await Order.find_one({"_id" : ObjectId(order_id), "share" : True})
             if con3:
                 return_data.append(con3.model_dump())
 

@@ -8,6 +8,8 @@ from src.schemas.order import (
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
 )
+from src.schemas.food import food_schema
+from src.models.food import Food
 from src.routers.menu.utils import (
     create_new_menu,
     create_new_order,
@@ -120,3 +122,18 @@ async def delete_order_by_title(title: str) -> dict:
     if order is not None:
         await order.delete()
         return order.model_dump()
+
+@menu_router.post(
+    "/add_food",
+    dependencies=[Depends(jwt_validator)],
+    response_model=ApiResponse
+)
+
+async def add_food_by_menu(new_food : food_schema):
+    add_new_food = Food(food_name=new_food.food_name,
+                    image_url=new_food.image_url,
+                    price=new_food.price,
+                    ingredients=new_food.ingredients)
+    await add_new_food.insert()
+
+    return None
