@@ -66,7 +66,7 @@ async def user_login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()])
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        expires = 600
+        expires = 1200
         return create_access_token(user_in_db, expires_delta=expires)
     return {"detail": "User not found"}
 

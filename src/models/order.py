@@ -1,10 +1,10 @@
-from beanie import Document
+from beanie import Document, Indexed
 from datetime import datetime
 from pydantic import BaseModel
 
 
 class Menu(Document):
-    title: str
+    title: str 
     link: str
     image_name: str
 
@@ -46,6 +46,14 @@ class ItemOrder(Document):
 
     class Settings:
         name = "order_detail"
+
+
+class UserOrder(Document):
+    username : Indexed(str, unique=True) # type: ignore
+    allow_order_id_list: list[str]
+    class Settings:
+        name = "user_order"
+
 
 
 

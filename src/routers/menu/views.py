@@ -8,17 +8,20 @@ from src.schemas.order import (
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
 )
+from src.schemas.food import food_schema
+from src.models.food import Food
 from src.routers.menu.utils import (
     create_new_menu,
     create_new_order,
     get_order,
+    get_order_v2,
     get_menu,
     get_image_of_menu,
     add_new_item_to_order,
     add_new_item_to_order_by_id,
 )
 
-from src.auth.auth_bearer import jwt_validator, get_current_user
+from src.auth.auth_bearer import jwt_validator, get_current_user, get_current_area
 from src.models.order import Menu, Order
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
@@ -57,6 +60,15 @@ async def create_order(request_data: CreateOrderSchema, current_user:str = Depen
 async def get_all_order():
     result = await get_order()
     return {"data": result}
+
+#-------------------[new get order]------------
+@menu_router.post(
+    "/get_user_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_order_by_user(current_user:str = Depends(get_current_user), current_area: int = Depends(get_current_area)):
+    result = await get_order_v2(current_user, current_area)
+    return {"data": result}
+#----------------------------------------------
 
 
 @menu_router.post(
@@ -110,3 +122,18 @@ async def delete_order_by_title(title: str) -> dict:
     if order is not None:
         await order.delete()
         return order.model_dump()
+
+@menu_router.post(
+    "/add_food",
+    dependencies=[Depends(jwt_validator)],
+    response_model=ApiResponse
+)
+
+async def add_food_by_menu(new_food : food_schema):
+    add_new_food = Food(food_name=new_food.food_name,
+                    image_url=new_food.image_url,
+                    price=new_food.price,
+                    ingredients=new_food.ingredients)
+    await add_new_food.insert()
+
+    return None
