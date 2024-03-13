@@ -13,9 +13,11 @@ from src.schemas.order import (
     AddNewItemSchema,
     AddNewItemByOrderIDSchema
 )
+from src.schemas.food import food_schema
 
 from src.models.order import Menu, Order, ItemOrder, UserOrder
 from src.models.users import User
+from src.models.food import Food
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
@@ -291,3 +293,48 @@ async def get_order_v2(current_user : str, current_area : int):
     #     return []
     
 #-------------------------------------------------
+
+
+
+#----------[add new food]--------------------
+async def add_new_food(request_data : food_schema, img : UploadFile):
+    img_url = await upload_img(img)
+    new_food = Food(
+        food_name= request_data.food_name,
+        price=request_data.price,
+        ingredients= request_data.ingredients,
+        menu_id=request_data.menu_id,
+        image_url=img_url
+    )
+    try:
+        exist_menu = await Menu.find_one({"_id" : ObjectId(request_data.menu_id)})
+        if not exist_menu:
+            raise ValueError("Menu not exist !")
+        exist_food = await Food.find_one({"food_name" : request_data.food_name,
+                                          "menu_id" : request_data.menu_id})
+        if exist_food:
+            raise ValueError("food already exist !")
+        await new_food.insert()
+
+    except Exception as e:
+        logger.error(f"Error when add a new food {e}:")
+        raise ErrorResponseException(**get_error_code(4000105))
+
+    
+    return new_food.model_dump()
+#--------------------------------------------
+
+
+#----------[Get All Food]--------------------
+async def get_all_food():
+    result = Food.find_all()
+    return_data = []
+    async for data in result:
+        return_data.append(data.model_dump())
+
+    return return_data
+#--------------------------------------------
+
+
+#----------[Get Food By Menu]------------------------------
+#---------------------------------------------------------

@@ -19,6 +19,8 @@ from src.routers.menu.utils import (
     get_image_of_menu,
     add_new_item_to_order,
     add_new_item_to_order_by_id,
+    add_new_food,
+    get_all_food,
 )
 
 from src.auth.auth_bearer import jwt_validator, get_current_user, get_current_area
@@ -123,17 +125,24 @@ async def delete_order_by_title(title: str) -> dict:
         await order.delete()
         return order.model_dump()
 
+#-------------------------[NEW FOOD MENU UPDATE]-------------------
 @menu_router.post(
     "/add_food",
     dependencies=[Depends(jwt_validator)],
     response_model=ApiResponse
 )
 
-async def add_food_by_menu(new_food : food_schema):
-    add_new_food = Food(food_name=new_food.food_name,
-                    image_url=new_food.image_url,
-                    price=new_food.price,
-                    ingredients=new_food.ingredients)
-    await add_new_food.insert()
+async def add_food_by_menu(request_data: food_schema = Depends(food_schema.as_form)
+                           , image: UploadFile = File(...),):
+    result = await add_new_food(request_data, image)
 
-    return None
+    return {"data" : [result]}
+
+
+@menu_router.post("/get_all_food", dependencies=[Depends(jwt_validator)])
+async def get_food():
+    result = await get_all_food()
+
+    return {"data" : [result]}
+
+#-------------------------------------------------------------------
