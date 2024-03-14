@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Menu(Document):
-    title: str 
+    title: Indexed(str, unique=True) # type: ignore 
     link: str
     image_name: str
 

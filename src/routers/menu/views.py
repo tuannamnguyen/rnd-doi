@@ -7,8 +7,9 @@ from src.schemas.order import (
     GetMenuImageSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
+    
 )
-from src.schemas.food import food_schema
+from src.schemas.food import food_schema, AddNewItemSchemaV3
 from src.models.food import Food
 from src.routers.menu.utils import (
     create_new_menu,
@@ -21,10 +22,13 @@ from src.routers.menu.utils import (
     add_new_item_to_order_by_id,
     add_new_food,
     get_all_food,
+    get_food_by_menu_title,
+    add_new_item_v3
+    # get_food_by_menu_from_order
 )
 
 from src.auth.auth_bearer import jwt_validator, get_current_user, get_current_area
-from src.models.order import Menu, Order
+from src.models.order import Menu, Order, Item
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
@@ -144,5 +148,22 @@ async def get_food():
     result = await get_all_food()
 
     return {"data" : [result]}
+
+
+
+@menu_router.post("/get_food_by_menu", dependencies=[Depends(jwt_validator)])
+async def get_food(menu_title : str):
+    result = await get_food_by_menu_title(menu_title)
+
+    return {"data" : [result]}
+
+
+@menu_router.post("/test_add_v3", dependencies=[Depends(jwt_validator)])
+async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
+    result = await add_new_item_v3(current_user, request_data)
+
+    return {"data" : [result]}
+
+
 
 #-------------------------------------------------------------------

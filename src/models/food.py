@@ -7,7 +7,7 @@ class Food(Document):
     food_name : str
     price: int
     ingredients : list[str]
-    menu_id : str
+    menu_title : str
     image_url : str
     class Settings:
         name = "food"
