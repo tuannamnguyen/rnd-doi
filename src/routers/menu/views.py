@@ -94,14 +94,14 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 
 
 @menu_router.post(
-    "/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/add_new_item_old_v2", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str = Depends(get_current_user)):
     result = await add_new_item_to_order_by_id(request_data, current_user)
     return {"data": [result]}
 
 @menu_router.post(
-    "/add_new_item_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/add_new_item_old_v1", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
@@ -131,7 +131,7 @@ async def delete_order_by_title(title: str) -> dict:
 
 #-------------------------[NEW FOOD MENU UPDATE]-------------------
 @menu_router.post(
-    "/add_food",
+    "/add_new_food",
     dependencies=[Depends(jwt_validator)],
     response_model=ApiResponse
 )
@@ -158,7 +158,7 @@ async def get_food(menu_title : str):
     return {"data" : [result]}
 
 
-@menu_router.post("/test_add_v3", dependencies=[Depends(jwt_validator)])
+@menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)])
 async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
     result = await add_new_item_v3(current_user, request_data)
 
