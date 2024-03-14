@@ -5,6 +5,7 @@ from src.schemas.order import (
     CreateMenuSchema,
     CreateOrderSchema,
     GetMenuImageSchema,
+    GetFoodImageSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
     
@@ -165,5 +166,9 @@ async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends
     return {"data" : result}
 
 
+@menu_router.post("/get_food_image", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
+async def show_food_image(request_data : GetFoodImageSchema):
+    result = await get_image_of_menu(request_data.image_url)
+    return {"data": [result]}
 
 #-------------------------------------------------------------------
