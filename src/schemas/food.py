@@ -21,6 +21,7 @@ class ItemV3(BaseModel):
     order_for : str
     food_id : str
     quantity : int
+    note: str
 
 class AddNewItemSchemaV3(BaseModel):
     order_id : str

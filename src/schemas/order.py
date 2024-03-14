@@ -19,6 +19,7 @@ class CreateItemSchema(BaseModel):
     food: str
     price: int
     quantity: int
+    note : str
 
 
 class CreateOrderSchema(BaseModel):

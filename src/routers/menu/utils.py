@@ -239,7 +239,8 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
                 food=item.food,
                 order_for=item.order_for,
                 price=item.price,
-                quantity=item.quantity
+                quantity=item.quantity,
+                note=item.note
                 )
         
         
@@ -392,7 +393,8 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
         new_item_list = CreateItemSchema(order_for=current_item.order_for,
                         food=item_info.food_name,
                         price=item_info.price,
-                        quantity=current_item.quantity)
+                        quantity=current_item.quantity,
+                        note=current_item.note)
         item_list.append(new_item_list)
 
     request_data_2_template = AddNewItemByOrderIDSchema(
