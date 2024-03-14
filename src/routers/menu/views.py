@@ -141,7 +141,7 @@ async def add_food_by_menu(request_data: food_schema = Depends(food_schema.as_fo
                            , image: UploadFile = File(...),):
     result = await add_new_food(request_data, image)
 
-    return {"data" : result}
+    return {"data" : [result]}
 
 
 @menu_router.post("/get_all_food", dependencies=[Depends(jwt_validator)])
