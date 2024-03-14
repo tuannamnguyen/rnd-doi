@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Menu(Document):
-    title: str 
+    title: Indexed(str, unique=True) # type: ignore 
     link: str
     image_name: str
 
@@ -17,6 +17,7 @@ class Item(BaseModel):
     food: str
     price: int
     quantity: int
+    note : str
 
 
 class Order(Document):
@@ -43,6 +44,7 @@ class ItemOrder(Document):
     food: str
     price : int
     quantity: int
+    note : str
 
     class Settings:
         name = "order_detail"

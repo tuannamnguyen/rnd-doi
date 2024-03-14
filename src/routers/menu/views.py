@@ -7,8 +7,9 @@ from src.schemas.order import (
     GetMenuImageSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
+    
 )
-from src.schemas.food import food_schema
+from src.schemas.food import food_schema, AddNewItemSchemaV3
 from src.models.food import Food
 from src.routers.menu.utils import (
     create_new_menu,
@@ -19,10 +20,15 @@ from src.routers.menu.utils import (
     get_image_of_menu,
     add_new_item_to_order,
     add_new_item_to_order_by_id,
+    add_new_food,
+    get_all_food,
+    get_food_by_menu_title,
+    add_new_item_v3
+    # get_food_by_menu_from_order
 )
 
 from src.auth.auth_bearer import jwt_validator, get_current_user, get_current_area
-from src.models.order import Menu, Order
+from src.models.order import Menu, Order, Item
 
 menu_router = APIRouter(prefix="/api/menu", tags=["Menu"])
 
@@ -88,14 +94,14 @@ async def get_menu_image(request_data: GetMenuImageSchema):
 
 
 @menu_router.post(
-    "/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/add_new_item_old_v2", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str = Depends(get_current_user)):
     result = await add_new_item_to_order_by_id(request_data, current_user)
     return {"data": [result]}
 
 @menu_router.post(
-    "/add_new_item_old", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/add_new_item_old_v1", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
@@ -123,17 +129,41 @@ async def delete_order_by_title(title: str) -> dict:
         await order.delete()
         return order.model_dump()
 
+#-------------------------[NEW FOOD MENU UPDATE]-------------------
 @menu_router.post(
-    "/add_food",
+    "/add_new_food",
     dependencies=[Depends(jwt_validator)],
     response_model=ApiResponse
 )
 
-async def add_food_by_menu(new_food : food_schema):
-    add_new_food = Food(food_name=new_food.food_name,
-                    image_url=new_food.image_url,
-                    price=new_food.price,
-                    ingredients=new_food.ingredients)
-    await add_new_food.insert()
+async def add_food_by_menu(request_data: food_schema = Depends(food_schema.as_form)
+                           , image: UploadFile = File(...),):
+    result = await add_new_food(request_data, image)
 
-    return None
+    return {"data" : [result]}
+
+
+@menu_router.post("/get_all_food", dependencies=[Depends(jwt_validator)])
+async def get_food():
+    result = await get_all_food()
+
+    return {"data" : [result]}
+
+
+
+@menu_router.post("/get_food_by_menu", dependencies=[Depends(jwt_validator)])
+async def get_food(menu_title : str):
+    result = await get_food_by_menu_title(menu_title)
+
+    return {"data" : [result]}
+
+
+@menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)])
+async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
+    result = await add_new_item_v3(current_user, request_data)
+
+    return {"data" : [result]}
+
+
+
+#-------------------------------------------------------------------

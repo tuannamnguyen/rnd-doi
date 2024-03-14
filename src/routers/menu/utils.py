@@ -11,11 +11,18 @@ from src.schemas.order import (
     CreateMenuSchema,
     CreateOrderSchema,
     AddNewItemSchema,
-    AddNewItemByOrderIDSchema
+    AddNewItemByOrderIDSchema,
+    CreateItemSchema
 )
-
-from src.models.order import Menu, Order, ItemOrder, UserOrder
+from src.schemas.food import (
+    food_schema,
+    AddNewItemSchemaV3,
+    ItemV3
+    
+)
+from src.models.order import Menu, Order, ItemOrder, UserOrder, Item
 from src.models.users import User
+from src.models.food import Food
 from src.core.templates.fastapi_minio import minio_client
 from uuid import uuid4
 import cloudinary
@@ -232,7 +239,8 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
                 food=item.food,
                 order_for=item.order_for,
                 price=item.price,
-                quantity=item.quantity
+                quantity=item.quantity,
+                note=item.note
                 )
         
         
@@ -291,3 +299,110 @@ async def get_order_v2(current_user : str, current_area : int):
     #     return []
     
 #-------------------------------------------------
+
+
+
+#----------[add new food]--------------------
+async def add_new_food(request_data : food_schema, img : UploadFile):
+    img_url = await upload_img(img)
+    new_food = Food(
+        food_name= request_data.food_name,
+        price=request_data.price,
+        ingredients= request_data.ingredients,
+        menu_title=request_data.menu_title,
+        image_url=img_url
+    )
+    try:
+        exist_menu = await Menu.find_one({"title" : request_data.menu_title})
+        if not exist_menu:
+            raise ValueError("Menu not exist !")
+        exist_food = await Food.find_one({"food_name" : request_data.food_name,
+                                          "menu_title" : request_data.menu_title})
+        if exist_food:
+            raise ValueError("food already exist !")
+        await new_food.insert()
+
+    except Exception as e:
+        logger.error(f"Error when add a new food {e}:")
+        raise ErrorResponseException(**get_error_code(4000105))
+
+    
+    return new_food.model_dump()
+#--------------------------------------------
+
+
+#----------[Get All Food]--------------------
+async def get_all_food():
+    result = Food.find_all()
+    return_data = []
+    async for data in result:
+        return_data.append(data.model_dump())
+
+    return return_data
+#--------------------------------------------
+
+
+#----------[Get Food By Order ID]-----------------------------
+
+# async def get_food_by_menu_from_order(order_id : str):
+#     try:
+#         return_data = []
+#         current_order = await Order.find_one({"_id" : ObjectId(order_id)})
+#         print(current_order)
+#         if current_order:
+#             current_menu = await Menu.find_one({"title" : current_order.menu})
+#             print(current_menu)
+#             if current_menu:
+#                 result = Food.find({"menu_id" : str(current_menu.id)})
+#                 async for data in result:
+#                     print(data)
+#                     return_data.append(data.model_dump())
+
+
+
+
+#     except Exception as e:
+#         logger.error(f"fail at get food by menu from order {e} :")
+#         raise ErrorResponseException(**get_error_code(4000105))
+#     return return_data
+
+#---------------------------------------------------------
+
+
+#---------------[get food by menu title]---------------------
+async def get_food_by_menu_title(request_title: str):
+    return_data = []
+    result = Food.find({"menu_title" : request_title})
+    if result:
+        async for data in result:
+            return_data.append(data.model_dump())
+    return return_data
+
+
+#------------------------------------------------------------
+
+
+#--------[add new Item v3 (with food update)]----------------
+
+async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3):
+    item_list = []
+    food_list = request_data.new_items
+    for data in food_list:
+        current_item : ItemV3 = data
+        item_info = await Food.find_one({"_id" : ObjectId(current_item.food_id)})
+        new_item_list = CreateItemSchema(order_for=current_item.order_for,
+                        food=item_info.food_name,
+                        price=item_info.price,
+                        quantity=current_item.quantity,
+                        note=current_item.note)
+        item_list.append(new_item_list)
+
+    request_data_2_template = AddNewItemByOrderIDSchema(
+        order_id=request_data.order_id,
+        new_item=item_list
+    )
+
+    result = await add_new_item_to_order_by_id(request_data_2_template, current_user)
+    return result
+    
+#------------------------------------------------------------
