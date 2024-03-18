@@ -89,7 +89,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
     if not current_menu:
         raise ErrorResponseException(**get_error_code(4000107))
 
-    item_list_as_dict = [item.model_dump() for item in request_data.item_list]
+    # item_list_as_dict = [item.model_dump() for item in request_data.item_list]
 
     new_order = Order(
         created_by=current_user,
@@ -98,10 +98,10 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
         namesAllowed=request_data.namesAllowed,
         menu=request_data.menu,
         area=request_data.area,
-        share=request_data.share,
+        share=True,
         order_date=request_data.order_date,
         created_at=datetime.datetime.now(),
-        item_list=item_list_as_dict,
+        item_list=[],
         tags=request_data.tags,
     )
 
@@ -129,20 +129,20 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
         #-------------------------------------------------------------
 
         #---------------------[save item to db]-------------------
-        current_item_list = request_data.item_list
-        if current_item_list:
-            for item in current_item_list:
-                newitem_db = ItemOrder(
-                    created_at=datetime.datetime.now(),
-                    created_by=current_user,
-                    order_id=str(new_order.id),
-                    food=item.food,
-                    order_for=item.order_for,
-                    price=item.price,
-                    quantity=item.quantity
-                )
+        # current_item_list = request_data.item_list
+        # if current_item_list:
+        #     for item in current_item_list:
+        #         newitem_db = ItemOrder(
+        #             created_at=datetime.datetime.now(),
+        #             created_by=current_user,
+        #             order_id=str(new_order.id),
+        #             food=item.food,
+        #             order_for=item.order_for,
+        #             price=item.price,
+        #             quantity=item.quantity
+        #         )
         
-            await newitem_db.insert()
+        #     await newitem_db.insert()
     #---------------------------------------------------------
     except Exception as e:
         logger.error(f"Error when create order: {e}")
@@ -235,6 +235,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
             newitem_db = ItemOrder(
                 created_at=datetime.datetime.now(),
                 created_by=current_user,
+                food_id=item.food_id,
                 order_id=request_data.order_id,
                 food=item.food,
                 order_for=item.order_for,
@@ -391,10 +392,12 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
         current_item : ItemV3 = data
         item_info = await Food.find_one({"_id" : ObjectId(current_item.food_id)})
         new_item_list = CreateItemSchema(order_for=current_item.order_for,
-                        food=item_info.food_name,
-                        price=item_info.price,
-                        quantity=current_item.quantity,
-                        note=current_item.note)
+                                        food_id=current_item.food_id,
+                                        created_by=current_user,
+                                        food=item_info.food_name,
+                                        price=item_info.price,
+                                        quantity=current_item.quantity,
+                                        note=current_item.note)
         item_list.append(new_item_list)
 
     request_data_2_template = AddNewItemByOrderIDSchema(
@@ -405,4 +408,4 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
     result = await add_new_item_to_order_by_id(request_data_2_template, current_user)
     return result
     
-#------------------------------------------------------------
+#-------------------------------------------------------------
