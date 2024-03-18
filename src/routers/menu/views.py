@@ -144,7 +144,7 @@ async def add_food_by_menu(request_data: food_schema = Depends(food_schema.as_fo
     return {"data" : [result]}
 
 
-@menu_router.post("/get_all_food", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
+@menu_router.post("/get_all_food", dependencies=[Depends(jwt_validator)])
 async def get_food():
     result = await get_all_food()
 
@@ -152,7 +152,7 @@ async def get_food():
 
 
 
-@menu_router.post("/get_food_by_menu", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
+@menu_router.post("/get_food_by_menu", dependencies=[Depends(jwt_validator)])
 async def get_food(menu_title : str):
     result = await get_food_by_menu_title(menu_title)
 
