@@ -15,7 +15,9 @@ class CreateMenuSchema(BaseModel):
 
 
 class CreateItemSchema(BaseModel):
+    created_by : str
     order_for: str
+    food_id : str
     food: str
     price: int
     quantity: int
@@ -28,8 +30,8 @@ class CreateOrderSchema(BaseModel):
     namesAllowed: list[str]
     menu: str
     area: int
-    share: bool
-    item_list: list[CreateItemSchema]
+    # share: bool
+    # item_list: list[CreateItemSchema]
     tags: list[str]
     order_date: str
 
