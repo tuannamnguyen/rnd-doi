@@ -94,7 +94,7 @@ async def get_order_by_id(order_id : str):
 @menu_router.get(
     "/get_user_order/{order_id}/foods", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
-async def get_order_by_id(order_id : str):
+async def get_food_by_order_id(order_id : str):
     result =  await do_get_food_by_order_id(order_id)
     return {"data" : result}
 #-------------------------------------------------------------
