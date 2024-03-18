@@ -159,11 +159,11 @@ async def get_food(menu_title : str):
     return {"data" : result}
 
 
-@menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)])
+@menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
 async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
     result = await add_new_item_v3(current_user, request_data)
 
-    return {"data" : result}
+    return {"data" : [result]}
 
 
 @menu_router.post("/get_food_image", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
