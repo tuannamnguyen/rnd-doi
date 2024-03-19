@@ -14,9 +14,10 @@ from src.auth.auth_handler import (
     create_access_token,
     get_password_hash,
     do_refresh_token,
+    verify_password
 )
 from src.models.users import User
-from src.schemas.users import UserSchema, UpdateUserSchema
+from src.schemas.users import UserSchema, UpdateUserSchema, UpdatePasswordSchema
 from marshmallow.exceptions import ValidationError
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
@@ -106,15 +107,33 @@ async def get_all_user():
 
 
 @user_router.post(
-    "/update_user",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+    "/update_info",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 
-async def update_user(info : UpdateUserSchema , current_user:str = Depends(get_current_user)):
+async def update_info(info : UpdateUserSchema , current_user:str = Depends(get_current_user)):
     current_user_info = await User.find_one({"username" : current_user})
     await current_user_info.set({"fullname" : info.fullname,
                                  "area" : info.area})
-    current_user_info.save()
+    await current_user_info.save()
 
     return {"data" : [{"username" : current_user_info.username,
-                       "fullname": current_user_info.fullname, 
+                       "fullname": current_user_info.fullname,
                        "area" :current_user_info.area}]}
+
+@user_router.post(
+    "/update_password",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+
+async def update_password(request_data : UpdatePasswordSchema, current_user:str = Depends(get_current_user)):
+    current_user_info = await User.find_one({"username" : current_user})
+    if (verify_password(request_data.old_password, current_user_info.password) is True and
+                        request_data.new_password == request_data.confirm_password):
+            await current_user_info.set({"password" : get_password_hash(request_data.new_password)})
+            await current_user_info.save()
+
+            return {"data" : []}
+
+    else :
+        return {"success" : False}
+
+
