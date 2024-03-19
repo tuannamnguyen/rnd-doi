@@ -12,3 +12,8 @@ class UserSchema(BaseModel):
 class UpdateUserSchema(BaseModel):
     fullname : str
     area : int
+
+class UpdatePasswordSchema(BaseModel):
+    old_password : str
+    new_password : str
+    confirm_password : str
