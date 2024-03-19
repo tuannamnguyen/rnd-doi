@@ -7,3 +7,8 @@ class UserSchema(BaseModel):
     area: int
     password: str
     confirm_password : str
+
+
+class UpdateUserSchema(BaseModel):
+    fullname : str
+    area : int

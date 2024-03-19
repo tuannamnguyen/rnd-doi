@@ -409,3 +409,28 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
     return result
     
 #-------------------------------------------------------------
+
+#-------------[Do get order by id]----------------------------
+
+async def do_get_order_by_id(order_id : str):
+    result = await Order.find_one({"_id" : ObjectId(order_id)})
+    return result.model_dump()
+
+#-------------------------------------------------------------
+
+
+#-------------[Do get food by order id]----------------------------
+
+async def do_get_food_by_order_id(order_id : str):
+    result = []
+    current_order = await Order.find_one({"_id" : ObjectId(order_id)})
+    foods = Food.find({"menu_title" : current_order.menu})
+    async for data in foods:
+        result.append(data.model_dump())
+
+    return result
+
+
+#-------------------------------------------------------------
+
+
