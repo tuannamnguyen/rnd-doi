@@ -8,7 +8,7 @@ from src.exceptions.error_response_exception import ErrorResponseException
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from src.models.order import Menu
 from src.schemas.response import ApiResponse
-from src.auth.auth_bearer import jwt_validator
+from src.auth.auth_bearer import jwt_validator, get_current_user
 from src.auth.auth_handler import (
     authenticate_user,
     create_access_token,
@@ -16,7 +16,7 @@ from src.auth.auth_handler import (
     do_refresh_token,
 )
 from src.models.users import User
-from src.schemas.users import UserSchema
+from src.schemas.users import UserSchema, UpdateUserSchema
 from marshmallow.exceptions import ValidationError
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
@@ -102,3 +102,19 @@ async def get_all_user():
         return_data.append(data.model_dump())
 
     return {"data": return_data}
+
+
+
+@user_router.post(
+    "/update_user",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+
+async def update_user(info : UpdateUserSchema , current_user:str = Depends(get_current_user)):
+    current_user_info = await User.find_one({"username" : current_user})
+    await current_user_info.set({"fullname" : info.fullname,
+                                 "area" : info.area})
+    current_user_info.save()
+
+    return {"data" : [{"username" : current_user_info.username,
+                       "fullname": current_user_info.fullname, 
+                       "area" :current_user_info.area}]}
