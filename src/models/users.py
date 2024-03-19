@@ -7,6 +7,7 @@ class User(Document):
     password: str
     role : str
     area : int
+    img_url : str
 
     class Settings:
         name = "users"

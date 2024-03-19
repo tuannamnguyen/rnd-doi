@@ -1,3 +1,4 @@
+from fastapi import Form
 from pydantic import BaseModel, field_validator
 
 
@@ -12,6 +13,9 @@ class UserSchema(BaseModel):
 class UpdateUserSchema(BaseModel):
     fullname : str
     area : int
+    @classmethod
+    def as_form(cls, fullname: str = Form(...), area: str = Form(...)):
+        return cls(fullname=fullname, area=area)
 
 class UpdatePasswordSchema(BaseModel):
     old_password : str
