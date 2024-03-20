@@ -153,6 +153,22 @@ async def get_user_img(current_user:str = Depends(get_current_user)):
     return {"data" : [img_url]}
     
 
-
-
+@user_router.get(
+    "/get_profile_user", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_profile_user(current_user:str = Depends(get_current_user)):
+    current_user_info = await User.find_one({"username" : current_user})
+    if current_user_info:
+        return {"data" : [{
+            "fullname" : current_user_info.fullname,
+            "username" : current_user_info.username,
+            "area" : current_user_info.area,
+            "image" : await get_image_of_menu(current_user_info.img_url)
+        }]}
+    
+    else:
+        return {
+            "success" : False,
+            "error" : "unexpected error occured!"
+        }
 
