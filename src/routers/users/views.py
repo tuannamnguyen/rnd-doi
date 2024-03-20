@@ -1,6 +1,6 @@
 from typing import Annotated
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordRequestForm
 from src.constants.error_code import get_error_code
@@ -18,6 +18,7 @@ from src.auth.auth_handler import (
 )
 from src.models.users import User
 from src.schemas.users import UserSchema, UpdateUserSchema, UpdatePasswordSchema
+from src.routers.menu.utils import upload_img, get_image_of_menu
 from marshmallow.exceptions import ValidationError
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
@@ -41,7 +42,7 @@ async def user_signup(user: UserSchema):
             raise ValidationError("area not exist !")
         new_user_model = User(
             fullname=user.fullname, username=user.username, password=user.password,
-            role="user", area=user.area
+            role="user", area=user.area, img_url=""
         )
         # Insert hashed password into DB
         new_user_model.password = get_password_hash(user.password)
@@ -106,21 +107,27 @@ async def get_all_user():
 
 
 
-@user_router.post(
+@user_router.put(
     "/update_info",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 
-async def update_info(info : UpdateUserSchema , current_user:str = Depends(get_current_user)):
+async def update_info(info : UpdateUserSchema = Depends(UpdateUserSchema.as_form),
+                        image_url : UploadFile = File(...),
+                        current_user:str = Depends(get_current_user)):
+                        
     current_user_info = await User.find_one({"username" : current_user})
+    url =  await upload_img(image_url)
     await current_user_info.set({"fullname" : info.fullname,
-                                 "area" : info.area})
+                                 "area" : info.area,
+                                 "img_url" :url})
     await current_user_info.save()
 
     return {"data" : [{"username" : current_user_info.username,
                        "fullname": current_user_info.fullname,
-                       "area" :current_user_info.area}]}
+                       "area" :current_user_info.area,
+                       "image_url" : url}]}
 
-@user_router.post(
+@user_router.put(
     "/update_password",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 
@@ -135,5 +142,17 @@ async def update_password(request_data : UpdatePasswordSchema, current_user:str 
 
     else :
         return {"success" : False}
+    
+
+@user_router.get(
+    "/img",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_user_img(current_user:str = Depends(get_current_user)):
+    current_user_info = await User.find_one({"username" : current_user})
+    img_url = await get_image_of_menu(current_user_info.img_url)
+    return {"data" : [img_url]}
+    
+
+
 
 
