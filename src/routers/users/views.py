@@ -112,20 +112,27 @@ async def get_all_user():
 )
 
 async def update_info(info : UpdateUserSchema = Depends(UpdateUserSchema.as_form),
-                        image_url : UploadFile = File(...),
                         current_user:str = Depends(get_current_user)):
                         
     current_user_info = await User.find_one({"username" : current_user})
-    url =  await upload_img(image_url)
+    # url =  await upload_img(image_url)
     await current_user_info.set({"fullname" : info.fullname,
-                                 "area" : info.area,
-                                 "img_url" :url})
+                                 "area" : info.area})
     await current_user_info.save()
 
     return {"data" : [{"username" : current_user_info.username,
                        "fullname": current_user_info.fullname,
-                       "area" :current_user_info.area,
-                       "image_url" : url}]}
+                       "area" :current_user_info.area}]}
+
+@user_router.put("/update_image", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
+async def update_image(image_url : UploadFile = File(...), current_user:str = Depends(get_current_user)):
+    current_user_info = await User.find_one({"username" : current_user})
+    url =  await upload_img(image_url)
+    await current_user_info.set({"img_url" : url})
+    await current_user_info.save()
+    return {"data" : [{ "username" : current_user_info.username,
+                        "image_url" : url}]}
+
 
 @user_router.put(
     "/update_password",  dependencies=[Depends(jwt_validator)], response_model=ApiResponse
