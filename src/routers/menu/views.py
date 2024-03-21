@@ -26,7 +26,8 @@ from src.routers.menu.utils import (
     get_food_by_menu_title,
     add_new_item_v3,
     do_get_order_by_id,
-    do_get_food_by_order_id
+    do_get_food_by_order_id,
+    get_my_order
     # get_food_by_menu_from_order
 )
 
@@ -99,6 +100,15 @@ async def get_food_by_order_id(order_id : str):
     return {"data" : result}
 #-------------------------------------------------------------
 
+#--------------[get my order]--------------------
+@menu_router.get(
+        "/get_my_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def a_get_my_order(current_user:str = Depends(get_current_user)):
+    result = await get_my_order(current_user)
+    return {"data" : result}
+#------------------------------------------------
+
 @menu_router.post(
     "/get_all_menu", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
@@ -128,7 +138,6 @@ async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str
 async def add_new_item(request_data: AddNewItemSchema):
     result = await add_new_item_to_order(request_data)
     return {"data": [result]}
-
 
 @menu_router.delete(
     "/{title}", dependencies=[Depends(jwt_validator)], status_code=status.HTTP_200_OK
