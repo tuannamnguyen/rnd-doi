@@ -103,7 +103,7 @@ async def get_food_by_order_id(order_id : str):
 
 #--------------[get my order]--------------------
 @menu_router.get(
-        "/get_my_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+        "/get_my_order/all", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def routing_get_my_order(current_user:str = Depends(get_current_user)):
     result = await get_my_order(current_user)
