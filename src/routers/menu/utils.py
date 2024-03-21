@@ -390,6 +390,33 @@ async def get_my_order(current_user : str):
 
     return result
 
+
+async def get_order_created(current_user : str):
+    result= []
+    order_list = Order.find({"created_by" : current_user})
+    async for data in order_list:
+        result.append(data.model_dump())
+
+
+    return result
+
+
+async def get_order_joined(current_user : str):
+    result = []
+    order_list2 = Order.find({"created_by" : {"$ne": current_user}})
+    async for data in order_list2:
+        dup_list = []
+        item_list : Item = []
+        item_list = data.item_list
+        for item_data in item_list:
+            if item_data.created_by == current_user:
+                result.append(data.model_dump())
+                break
+
+
+    return result
+
+
 #-------------------------------------------------------------------------------------------------------/
 
 #---------------[get food by menu title]---------------------

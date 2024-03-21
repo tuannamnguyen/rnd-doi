@@ -27,7 +27,8 @@ from src.routers.menu.utils import (
     add_new_item_v3,
     do_get_order_by_id,
     do_get_food_by_order_id,
-    get_my_order
+    get_my_order,
+    get_order_created, get_order_joined,
     # get_food_by_menu_from_order
 )
 
@@ -104,10 +105,27 @@ async def get_food_by_order_id(order_id : str):
 @menu_router.get(
         "/get_my_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
-async def a_get_my_order(current_user:str = Depends(get_current_user)):
+async def routing_get_my_order(current_user:str = Depends(get_current_user)):
     result = await get_my_order(current_user)
     return {"data" : result}
 #------------------------------------------------
+
+#--------------[get my order - created by  / joined filter]----------
+@menu_router.get(
+        "/get_my_order/created", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def routing_get_my_order_created(current_user:str = Depends(get_current_user)):
+    result = await get_order_created(current_user)
+    return {"data" : result}
+
+@menu_router.get(
+        "/get_my_order/joined", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def routing__get_my_order_joined(current_user:str = Depends(get_current_user)):
+    result = await get_order_joined(current_user)
+    return {"data" : result}
+#------------------------------------------------------
+
 
 @menu_router.post(
     "/get_all_menu", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
