@@ -166,6 +166,14 @@ async def get_user_img(current_user:str = Depends(get_current_user)):
 async def get_profile_user(current_user:str = Depends(get_current_user)):
     current_user_info = await User.find_one({"username" : current_user})
     if current_user_info:
+        if current_user_info.img_url == "" :
+             return {"data" : [{
+                "fullname" : current_user_info.fullname,
+                "username" : current_user_info.username,
+                "area" : current_user_info.area,
+                "image" : ""
+                        }]}
+
         return {"data" : [{
             "fullname" : current_user_info.fullname,
             "username" : current_user_info.username,
