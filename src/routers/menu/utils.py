@@ -93,6 +93,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     new_order = Order(
         created_by=current_user,
+        active=True,
         title=request_data.title,
         description=request_data.description,
         namesAllowed=request_data.namesAllowed,
@@ -246,6 +247,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
         
         
             await newitem_db.insert()
+            item.item_id = str(newitem_db.id)
             current_item_list.append(item.model_dump())
 
     # current_order.update({"$set": {"item_list": current_item_list}})
@@ -441,6 +443,7 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
         current_item : ItemV3 = data
         item_info = await Food.find_one({"_id" : ObjectId(current_item.food_id)})
         new_item_list = CreateItemSchema(order_for=current_item.order_for,
+                                        item_id="",
                                         food_id=current_item.food_id,
                                         created_by=current_user,
                                         food=item_info.food_name,
@@ -505,5 +508,9 @@ async def get_user_image_by_order_id(order_id : str):
         
 #----------------------------------------------------------
 
+#--------------------------------[CHANGE ORDER STATUS]---------------------------
+async def update_order_status():
+    return 0
+#--------------------------------------------------------------------------------
 
 

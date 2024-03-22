@@ -13,6 +13,7 @@ class Menu(Document):
 
 
 class Item(BaseModel):
+    item_id : str
     created_by: str
     food_id : str
     order_for: str
@@ -24,6 +25,7 @@ class Item(BaseModel):
 
 class Order(Document):
     title: str
+    active : bool
     created_by: str
     created_at : datetime
     description: str
