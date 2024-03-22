@@ -29,6 +29,7 @@ from src.routers.menu.utils import (
     do_get_food_by_order_id,
     get_my_order,
     get_order_created, get_order_joined,
+    get_user_image_by_order_id
     # get_food_by_menu_from_order
 )
 
@@ -177,6 +178,20 @@ async def delete_order_by_title(title: str) -> dict:
     if order is not None:
         await order.delete()
         return order.model_dump()
+    
+
+@menu_router.get(
+        "/get_user_order/{order_id}/user_image", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def routing_get_user_image_by_order_id(order_id : str):
+    try:
+        result = await get_user_image_by_order_id(order_id)
+
+    except Exception as e:
+        return {"success" : False, "error" : str(e)}
+    
+    return {"data": [result]}
+
 
 #-------------------------[NEW FOOD MENU UPDATE]-------------------
 @menu_router.post(
@@ -218,5 +233,6 @@ async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends
 async def show_food_image(request_data : GetFoodImageSchema):
     result = await get_image_of_menu(request_data.image_url)
     return {"data": [result]}
+
 
 #-------------------------------------------------------------------

@@ -482,5 +482,28 @@ async def do_get_food_by_order_id(order_id : str):
 
 #-------------------------------------------------------------
 
+#------------[Get user Image By Order_id]-------------------
+async def get_user_image_by_order_id(order_id : str):
+    try:
+        current_order  = await Order.find_one({"_id" : ObjectId(order_id)})
+        if not current_order:
+            raise Exception("order not found !")
+        result_user =  await User.find_one({"username" : current_order.created_by})
+
+        if not current_order:
+            raise Exception("User not found !")
+        
+        result_img = ""
+        
+        if result_user.img_url != "":
+
+            result_img = await get_image_of_menu(result_user.img_url)
+        return result_img
+    except Exception as e:
+        logger.error(e)
+        raise Exception(e)
+        
+#----------------------------------------------------------
+
 
 
