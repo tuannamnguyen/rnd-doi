@@ -25,7 +25,7 @@ class Item(BaseModel):
 
 class Order(Document):
     title: str
-    active : bool
+    status : str #= ({"active" : 1, "closed" : 2, "expired" : 3})
     created_by: str
     created_at : datetime
     description: str

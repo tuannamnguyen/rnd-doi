@@ -93,7 +93,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     new_order = Order(
         created_by=current_user,
-        active=True,
+        status="active",
         title=request_data.title,
         description=request_data.description,
         namesAllowed=request_data.namesAllowed,
@@ -282,7 +282,7 @@ async def get_order_v2(current_user : str, current_area : int):
             con3 = await Order.find_one({"_id" : ObjectId(order_id), "share" : True})
             if con3:
                 return_data.append(con3.model_dump())
-
+    return_data.sort(key=lambda x: x.created_at, reverse=True)
                 
     return return_data
 
