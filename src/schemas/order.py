@@ -64,3 +64,7 @@ class AddNewItemSchema(BaseModel):
 class AddNewItemByOrderIDSchema(BaseModel):
     order_id: str
     new_item: list[CreateItemSchema]
+
+class UpdateOrderStatusSchema(BaseModel):
+    order_id : str
+    status : str

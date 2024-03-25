@@ -1,6 +1,7 @@
 import io
 import logging
 import datetime
+from operator import itemgetter
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
@@ -12,7 +13,8 @@ from src.schemas.order import (
     CreateOrderSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
-    CreateItemSchema
+    CreateItemSchema,
+    UpdateOrderStatusSchema
 )
 from src.schemas.food import (
     food_schema,
@@ -282,9 +284,10 @@ async def get_order_v2(current_user : str, current_area : int):
             con3 = await Order.find_one({"_id" : ObjectId(order_id), "share" : True})
             if con3:
                 return_data.append(con3.model_dump())
-    return_data.sort(key=lambda x: x.created_at, reverse=True)
                 
-    return return_data
+    sorted_result = sorted(return_data, key=itemgetter('created_at'), reverse=True)
+                
+    return sorted_result
 
     # if order_list:
     #     list_order_id = order_list.allow_order_id_list
@@ -389,6 +392,8 @@ async def get_my_order(current_user : str):
                 result.append(data.model_dump())
                 break
 
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
+
 
     return result
 
@@ -398,6 +403,7 @@ async def get_order_created(current_user : str):
     order_list = Order.find({"created_by" : current_user})
     async for data in order_list:
         result.append(data.model_dump())
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
     return result
@@ -414,6 +420,7 @@ async def get_order_joined(current_user : str):
             if item_data.created_by == current_user:
                 result.append(data.model_dump())
                 break
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
     return result
@@ -509,8 +516,31 @@ async def get_user_image_by_order_id(order_id : str):
 #----------------------------------------------------------
 
 #--------------------------------[CHANGE ORDER STATUS]---------------------------
-async def update_order_status():
-    return 0
-#--------------------------------------------------------------------------------
+async def update_order_status(request_data : UpdateOrderStatusSchema):
+    current_order = await Order.find_one({"_id" : ObjectId(request_data.order_id)})
+    if not current_order:
+        raise Exception("Order not found !")
+    
+    # match request_data.status:
+    #     case -1:
+    #         await current_order.set({"status" : "inactive"})
+    #         await current_order.save()
+    #     case 0:
+    #         await current_order.set({"status" : "expired"})
+    #         await current_order.save()
+    #     case 1:
+    #         await current_order.set({"status" : "active"})
+    #         await current_order.save()
+    #     case _:
+    #         raise Exception("status code invalid !")
+
+    if (request_data.status != "active" or request_data.status != "inactive" or request_data.status != "expired"):
+        raise Exception("status code invalid !")
+    
+    await current_order.set({"status" : "active"})
+    await current_order.save()
+    
+    return current_order.status
+#----------------------------------------------------------------------------
 
 
