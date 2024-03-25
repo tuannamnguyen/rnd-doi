@@ -395,7 +395,7 @@ async def get_my_order(current_user : str):
     sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
-    return result
+    return sorted_result
 
 
 async def get_order_created(current_user : str):
