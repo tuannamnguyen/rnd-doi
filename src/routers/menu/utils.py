@@ -516,8 +516,15 @@ async def get_user_image_by_order_id(order_id : str):
 #----------------------------------------------------------
 
 #--------------------------------[CHANGE ORDER STATUS]---------------------------
-async def update_order_status(request_data : UpdateOrderStatusSchema):
+async def update_order_status(request_data : UpdateOrderStatusSchema, current_user : str):
     current_order = await Order.find_one({"_id" : ObjectId(request_data.order_id)})
+
+    if request_data.status == current_order.status:
+        raise Exception("status not changed !")
+
+    if current_user != current_order.created_by:
+        raise Exception("Not Order's author")
+
     if not current_order:
         raise Exception("Order not found !")
     
@@ -534,13 +541,20 @@ async def update_order_status(request_data : UpdateOrderStatusSchema):
     #     case _:
     #         raise Exception("status code invalid !")
 
-    if (request_data.status != "active" or request_data.status != "inactive" or request_data.status != "expired"):
+    if (request_data.status != "active" and request_data.status != "inactive" and request_data.status != "expired"):
         raise Exception("status code invalid !")
     
-    await current_order.set({"status" : "active"})
+    if (request_data.status == "active" and current_order.status == "expired"):
+        await current_order.set({"order_date" : datetime.datetime.now()+datetime.timedelta(minutes=30)})
+    
+    await current_order.set({"status" : request_data.status})
     await current_order.save()
     
     return current_order.status
 #----------------------------------------------------------------------------
 
-
+#-------------------------------[set expired Order]---------------------------------------
+async def set_expired_order():
+    expired_order = Order.find({"status" : "active" ,"order_date": {"$lt": datetime.datetime.now()}})
+    await expired_order.update_many({}, {"$set" : {"status" : "expired"}})
+#--------------------------------------------------------------------------------------------------
