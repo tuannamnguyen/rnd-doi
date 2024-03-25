@@ -93,6 +93,7 @@ async def create_new_order(request_data: CreateOrderSchema, current_user: str):
 
     new_order = Order(
         created_by=current_user,
+        status="active",
         title=request_data.title,
         description=request_data.description,
         namesAllowed=request_data.namesAllowed,
@@ -246,6 +247,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
         
         
             await newitem_db.insert()
+            item.item_detail_id = str(newitem_db.id)
             current_item_list.append(item.model_dump())
 
     # current_order.update({"$set": {"item_list": current_item_list}})
@@ -280,7 +282,7 @@ async def get_order_v2(current_user : str, current_area : int):
             con3 = await Order.find_one({"_id" : ObjectId(order_id), "share" : True})
             if con3:
                 return_data.append(con3.model_dump())
-
+    return_data.sort(key=lambda x: x.created_at, reverse=True)
                 
     return return_data
 
@@ -432,7 +434,7 @@ async def get_food_by_menu_title(request_title: str):
 #------------------------------------------------------------
 
 
-#--------[add new Item v3 (with food update)]----------------
+#--------[add new Item v3 (with food update)]----------------   
 
 async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3):
     item_list = []
@@ -441,6 +443,7 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
         current_item : ItemV3 = data
         item_info = await Food.find_one({"_id" : ObjectId(current_item.food_id)})
         new_item_list = CreateItemSchema(order_for=current_item.order_for,
+                                        item_detail_id="",
                                         food_id=current_item.food_id,
                                         created_by=current_user,
                                         food=item_info.food_name,
@@ -482,5 +485,32 @@ async def do_get_food_by_order_id(order_id : str):
 
 #-------------------------------------------------------------
 
+#------------[Get user Image By Order_id]-------------------
+async def get_user_image_by_order_id(order_id : str):
+    try:
+        current_order  = await Order.find_one({"_id" : ObjectId(order_id)})
+        if not current_order:
+            raise Exception("order not found !")
+        result_user =  await User.find_one({"username" : current_order.created_by})
+
+        if not current_order:
+            raise Exception("User not found !")
+        
+        result_img = ""
+        
+        if result_user.img_url != "":
+
+            result_img = await get_image_of_menu(result_user.img_url)
+        return result_img
+    except Exception as e:
+        logger.error(e)
+        raise Exception(e)
+        
+#----------------------------------------------------------
+
+#--------------------------------[CHANGE ORDER STATUS]---------------------------
+async def update_order_status():
+    return 0
+#--------------------------------------------------------------------------------
 
 

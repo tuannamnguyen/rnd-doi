@@ -13,6 +13,7 @@ class Menu(Document):
 
 
 class Item(BaseModel):
+    item_detail_id : str
     created_by: str
     food_id : str
     order_for: str
@@ -24,6 +25,7 @@ class Item(BaseModel):
 
 class Order(Document):
     title: str
+    status : str #= ({"active" : 1, "closed" : 2, "expired" : 3})
     created_by: str
     created_at : datetime
     description: str
@@ -50,7 +52,7 @@ class ItemOrder(Document):
     note : str
 
     class Settings:
-        name = "order_detail"
+        name = "item_detail"
 
 
 class UserOrder(Document):
