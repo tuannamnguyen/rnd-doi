@@ -13,7 +13,7 @@ class Menu(Document):
 
 
 class Item(BaseModel):
-    item_id : str
+    item_detail_id : str
     created_by: str
     food_id : str
     order_for: str
@@ -52,7 +52,7 @@ class ItemOrder(Document):
     note : str
 
     class Settings:
-        name = "order_detail"
+        name = "item_detail"
 
 
 class UserOrder(Document):
