@@ -232,9 +232,28 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
     if not current_order:
         raise ErrorResponseException(**get_error_code(4000111))
     
+    if current_order.status=="expired" or current_order.status=="inactive":
+        raise ErrorResponseException("cannot add item for closed Order topic")
+    
+
+    
     current_item_list = current_order.item_list
     if len(request_data.new_item)!=0:
         for item in request_data.new_item:
+
+            check_exist = await ItemOrder.find_one({"order_id" : request_data.order_id,
+                                                    "order_for": item.order_for,
+                                                    "food" : item.food,
+                                                    "note" : item.note
+                                                    })
+
+            if check_exist:
+                pos = [data.item_detail_id for data in current_item_list].index(str(check_exist.id))
+                current_item_list[pos].quantity = current_item_list[pos].quantity + item.quantity
+                await check_exist.set({"quantity" : check_exist.quantity + item.quantity})
+                continue             
+
+
             newitem_db = ItemOrder(
                 created_at=datetime.datetime.now(),
                 created_by=current_user,
@@ -540,8 +559,10 @@ async def update_order_status(request_data : UpdateOrderStatusSchema, current_us
     #         await current_order.save()
     #     case _:
     #         raise Exception("status code invalid !")
+    status_list = ["active", "inactive", "expired"]
 
-    if (request_data.status != "active" and request_data.status != "inactive" and request_data.status != "expired"):
+    # if (request_data.status != "active" and request_data.status != "inactive" and request_data.status != "expired"):
+    if request_data.status not in status_list:
         raise Exception("status code invalid !")
     
     if (request_data.status == "active" and current_order.status == "expired"):
