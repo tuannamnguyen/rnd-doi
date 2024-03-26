@@ -67,7 +67,6 @@ class AddNewItemByOrderIDSchema(BaseModel):
 
 class UpdateOrderStatusSchema(BaseModel):
     order_id : str
-    status : str
 
 
 class BillDetailSchema(BaseModel):
