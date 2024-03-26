@@ -409,7 +409,7 @@ async def get_my_order(current_user : str):
         for item_data in item_list:
             if item_data.created_by == current_user:
                 result.append(data.model_dump())
-                break
+                continue
 
     sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
@@ -438,7 +438,7 @@ async def get_order_joined(current_user : str):
         for item_data in item_list:
             if item_data.created_by == current_user:
                 result.append(data.model_dump())
-                break
+                continue
     sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
