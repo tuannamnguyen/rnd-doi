@@ -8,6 +8,7 @@ from src.schemas.order import (
     GetFoodImageSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
+    UpdateOrderStatusSchema
     
 )
 from src.schemas.food import food_schema, AddNewItemSchemaV3
@@ -29,7 +30,10 @@ from src.routers.menu.utils import (
     do_get_food_by_order_id,
     get_my_order,
     get_order_created, get_order_joined,
-    get_user_image_by_order_id
+    get_user_image_by_order_id,
+    update_order_status,
+    set_expired_order,
+    do_delete_item_by_id
     # get_food_by_menu_from_order
 )
 
@@ -70,6 +74,7 @@ async def create_order(request_data: CreateOrderSchema, current_user:str = Depen
     "/get_all_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_all_order():
+    await set_expired_order()
     result = await get_order()
     return {"data": result}
 
@@ -78,6 +83,7 @@ async def get_all_order():
     "/get_user_order", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_order_by_user(current_user:str = Depends(get_current_user), current_area: int = Depends(get_current_area)):
+    await set_expired_order()
     result = await get_order_v2(current_user, current_area)
     return {"data": result}
 #----------------------------------------------
@@ -88,6 +94,7 @@ async def get_order_by_user(current_user:str = Depends(get_current_user), curren
     "/get_user_order/{order_id}", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def get_order_by_id(order_id : str):
+    await set_expired_order()
     result =  await do_get_order_by_id(order_id)
     return {"data" : [result]}
 #-------------------------------------------------------------
@@ -107,6 +114,7 @@ async def get_food_by_order_id(order_id : str):
         "/get_my_order/all", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def routing_get_my_order(current_user:str = Depends(get_current_user)):
+    await set_expired_order()
     result = await get_my_order(current_user)
     return {"data" : result}
 #------------------------------------------------
@@ -116,6 +124,7 @@ async def routing_get_my_order(current_user:str = Depends(get_current_user)):
         "/get_my_order/created", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def routing_get_my_order_created(current_user:str = Depends(get_current_user)):
+    await set_expired_order()
     result = await get_order_created(current_user)
     return {"data" : result}
 
@@ -123,6 +132,7 @@ async def routing_get_my_order_created(current_user:str = Depends(get_current_us
         "/get_my_order/joined", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def routing__get_my_order_joined(current_user:str = Depends(get_current_user)):
+    await set_expired_order()
     result = await get_order_joined(current_user)
     return {"data" : result}
 #------------------------------------------------------
@@ -148,6 +158,7 @@ async def get_menu_image(request_data: GetMenuImageSchema):
     "/add_new_item_old_v2", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str = Depends(get_current_user)):
+    await set_expired_order()
     result = await add_new_item_to_order_by_id(request_data, current_user)
     return {"data": [result]}
 
@@ -155,6 +166,7 @@ async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str
     "/add_new_item_old_v1", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
+    await set_expired_order()
     result = await add_new_item_to_order(request_data)
     return {"data": [result]}
 
@@ -180,6 +192,22 @@ async def delete_order_by_title(title: str) -> dict:
         return order.model_dump()
     
 
+@menu_router.delete(
+    "/delete_item/{item_id}",
+    dependencies=[Depends(jwt_validator)],
+     response_model=ApiResponse,
+)
+async def delete_item_by_id(item_id: str, current_user:str = Depends(get_current_user)):
+        try:
+
+            await do_delete_item_by_id(item_id=item_id, current_user=current_user)
+
+        except Exception as e:
+            return {"success" : False, "error" : str(e)}
+        
+        return {"data" : []}
+    
+
 @menu_router.get(
         "/get_user_order/{order_id}/user_image", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
@@ -191,6 +219,17 @@ async def routing_get_user_image_by_order_id(order_id : str):
         return {"success" : False, "error" : str(e)}
     
     return {"data": [result]}
+
+@menu_router.post(
+        "/update_order/status/", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def routing_update_order_status(request_data : UpdateOrderStatusSchema, current_user:str = Depends(get_current_user)):
+    try:
+        result = await update_order_status(request_data, current_user)
+
+    except Exception as e:
+        return {"success" : False, "error" : str(e)}
+    return {"data" : [result]}
 
 
 #-------------------------[NEW FOOD MENU UPDATE]-------------------
@@ -224,6 +263,7 @@ async def get_food(menu_title : str):
 
 @menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
 async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
+    await set_expired_order()
     result = await add_new_item_v3(current_user, request_data)
 
     return {"data" : [result]}

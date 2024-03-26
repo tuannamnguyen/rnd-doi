@@ -1,6 +1,7 @@
 import io
 import logging
 import datetime
+from operator import itemgetter
 from src.constants.logger import CONSOLE_LOGGER_NAME
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
@@ -12,7 +13,8 @@ from src.schemas.order import (
     CreateOrderSchema,
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
-    CreateItemSchema
+    CreateItemSchema,
+    UpdateOrderStatusSchema
 )
 from src.schemas.food import (
     food_schema,
@@ -230,9 +232,28 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
     if not current_order:
         raise ErrorResponseException(**get_error_code(4000111))
     
+    if current_order.status=="expired" or current_order.status=="inactive":
+        raise ErrorResponseException("cannot add item for closed Order topic")
+    
+
+    
     current_item_list = current_order.item_list
     if len(request_data.new_item)!=0:
         for item in request_data.new_item:
+
+            check_exist = await ItemOrder.find_one({"order_id" : request_data.order_id,
+                                                    "order_for": item.order_for,
+                                                    "food" : item.food,
+                                                    "note" : item.note
+                                                    })
+
+            if check_exist:
+                pos = [data.item_detail_id for data in current_item_list].index(str(check_exist.id))
+                current_item_list[pos].quantity = current_item_list[pos].quantity + item.quantity
+                await check_exist.set({"quantity" : check_exist.quantity + item.quantity})
+                continue             
+
+
             newitem_db = ItemOrder(
                 created_at=datetime.datetime.now(),
                 created_by=current_user,
@@ -282,9 +303,10 @@ async def get_order_v2(current_user : str, current_area : int):
             con3 = await Order.find_one({"_id" : ObjectId(order_id), "share" : True})
             if con3:
                 return_data.append(con3.model_dump())
-    return_data.sort(key=lambda x: x.created_at, reverse=True)
                 
-    return return_data
+    sorted_result = sorted(return_data, key=itemgetter('created_at'), reverse=True)
+                
+    return sorted_result
 
     # if order_list:
     #     list_order_id = order_list.allow_order_id_list
@@ -387,10 +409,12 @@ async def get_my_order(current_user : str):
         for item_data in item_list:
             if item_data.created_by == current_user:
                 result.append(data.model_dump())
-                break
+                continue
+
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
-    return result
+    return sorted_result
 
 
 async def get_order_created(current_user : str):
@@ -398,9 +422,10 @@ async def get_order_created(current_user : str):
     order_list = Order.find({"created_by" : current_user})
     async for data in order_list:
         result.append(data.model_dump())
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
-    return result
+    return sorted_result
 
 
 async def get_order_joined(current_user : str):
@@ -413,10 +438,11 @@ async def get_order_joined(current_user : str):
         for item_data in item_list:
             if item_data.created_by == current_user:
                 result.append(data.model_dump())
-                break
+                continue
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
 
 
-    return result
+    return sorted_result
 
 
 #-------------------------------------------------------------------------------------------------------/
@@ -461,6 +487,36 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
     return result
     
 #-------------------------------------------------------------
+
+
+#-------------------[Delete Item By Id]-------------------
+async def do_delete_item_by_id(item_id : str, current_user : str):
+    current_item = await ItemOrder.find_one(ItemOrder.id == ObjectId(item_id))
+    if not current_item:
+        raise Exception("Item not Found !")
+    
+    if current_item.created_by != current_user:
+        raise Exception("not Item's orderer !")
+    
+    item_in_order = await Order.find_one(Order.id == ObjectId(current_item.order_id))
+    if item_in_order.status != "active":
+        raise Exception("Order's topic closed")
+    order_item_list = item_in_order.item_list
+
+    pos = [data.item_detail_id for data in order_item_list].index(item_id)
+    order_item_list.pop(pos)
+
+  
+
+    item_in_order.item_list = order_item_list
+    await item_in_order.save()
+
+    await current_item.delete()
+
+#---------------------------------------------------------
+
+
+
 
 #-------------[Do get order by id]----------------------------
 
@@ -509,8 +565,47 @@ async def get_user_image_by_order_id(order_id : str):
 #----------------------------------------------------------
 
 #--------------------------------[CHANGE ORDER STATUS]---------------------------
-async def update_order_status():
-    return 0
-#--------------------------------------------------------------------------------
+async def update_order_status(request_data : UpdateOrderStatusSchema, current_user : str):
+    current_order = await Order.find_one({"_id" : ObjectId(request_data.order_id)})
 
+    if request_data.status == current_order.status:
+        raise Exception("status not changed !")
 
+    if current_user != current_order.created_by:
+        raise Exception("Not Order's author")
+
+    if not current_order:
+        raise Exception("Order not found !")
+    
+    # match request_data.status:
+    #     case -1:
+    #         await current_order.set({"status" : "inactive"})
+    #         await current_order.save()
+    #     case 0:
+    #         await current_order.set({"status" : "expired"})
+    #         await current_order.save()
+    #     case 1:
+    #         await current_order.set({"status" : "active"})
+    #         await current_order.save()
+    #     case _:
+    #         raise Exception("status code invalid !")
+    status_list = ["active", "inactive", "expired"]
+
+    # if (request_data.status != "active" and request_data.status != "inactive" and request_data.status != "expired"):
+    if request_data.status not in status_list:
+        raise Exception("status code invalid !")
+    
+    if (request_data.status == "active" and current_order.status == "expired"):
+        await current_order.set({"order_date" : datetime.datetime.now()+datetime.timedelta(minutes=30)})
+    
+    await current_order.set({"status" : request_data.status})
+    await current_order.save()
+    
+    return current_order.status
+#----------------------------------------------------------------------------
+
+#-------------------------------[set expired Order]-----------------------------------------------
+async def set_expired_order():
+    expired_order = Order.find({"status" : "active" ,"order_date": {"$lt": datetime.datetime.now()}})
+    await expired_order.update_many({}, {"$set" : {"status" : "expired"}})
+#--------------------------------------------------------------------------------------------------
