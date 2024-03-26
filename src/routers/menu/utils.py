@@ -14,7 +14,8 @@ from src.schemas.order import (
     AddNewItemSchema,
     AddNewItemByOrderIDSchema,
     CreateItemSchema,
-    UpdateOrderStatusSchema
+    UpdateOrderStatusSchema,
+    TotalBillSchema, BillDetailSchema
 )
 from src.schemas.food import (
     food_schema,
@@ -232,7 +233,7 @@ async def add_new_item_to_order_by_id(request_data: AddNewItemByOrderIDSchema, c
     if not current_order:
         raise ErrorResponseException(**get_error_code(4000111))
     
-    if current_order.status=="expired" or current_order.status=="inactive":
+    if current_order.status=="expired" or current_order.status=="closed":
         raise ErrorResponseException("cannot add item for closed Order topic")
     
 
@@ -514,8 +515,21 @@ async def do_delete_item_by_id(item_id : str, current_user : str):
     await current_item.delete()
 
 #---------------------------------------------------------
-
-
+    
+#----------------------[Do delete order v2]-----------------------\
+async def do_delete_order_by_id_v2(order_id : str, current_user : str):
+    current_order = await Order.find_one(Order.id == ObjectId(order_id))
+    if not current_order:
+        raise Exception("order not found")
+    if current_order.created_by != current_user:
+        raise Exception("nor order topic's author")
+    order_item_list = current_order.item_list
+    for data in order_item_list:
+        delete_item = await ItemOrder.find_one(ItemOrder.id == ObjectId(data.item_detail_id))
+        if delete_item:
+            await delete_item.delete()
+    await current_order.delete()
+#-----------------------------------------------------------------/
 
 
 #-------------[Do get order by id]----------------------------
@@ -568,38 +582,35 @@ async def get_user_image_by_order_id(order_id : str):
 async def update_order_status(request_data : UpdateOrderStatusSchema, current_user : str):
     current_order = await Order.find_one({"_id" : ObjectId(request_data.order_id)})
 
-    if request_data.status == current_order.status:
-        raise Exception("status not changed !")
-
     if current_user != current_order.created_by:
         raise Exception("Not Order's author")
 
     if not current_order:
         raise Exception("Order not found !")
-    
-    # match request_data.status:
-    #     case -1:
-    #         await current_order.set({"status" : "inactive"})
-    #         await current_order.save()
-    #     case 0:
-    #         await current_order.set({"status" : "expired"})
-    #         await current_order.save()
-    #     case 1:
-    #         await current_order.set({"status" : "active"})
-    #         await current_order.save()
-    #     case _:
-    #         raise Exception("status code invalid !")
-    status_list = ["active", "inactive", "expired"]
 
-    # if (request_data.status != "active" and request_data.status != "inactive" and request_data.status != "expired"):
-    if request_data.status not in status_list:
-        raise Exception("status code invalid !")
+    status_list = ["active", "closed", "expired"]
     
-    if (request_data.status == "active" and current_order.status == "expired"):
-        await current_order.set({"order_date" : datetime.datetime.now()+datetime.timedelta(minutes=30)})
+    match current_order.status:
+        case "active":
+            await current_order.set({"status" : "closed"})
+            await current_order.save()
+        case "closed":
+            await current_order.set({"status" : "active"})
+            await current_order.save()
+        case "expired":
+            await current_order.set({"order_date" : datetime.datetime.now()+datetime.timedelta(minutes=30)})
+            await current_order.set({"status" : "active"})
+            await current_order.save()
+        case _:
+            raise Exception("status code invalid !")
+
+
+    # if (request_data.status != "active" and request_data.status != "closed" and request_data.status != "expired"):
+    # if request_data.status not in status_list:
+    #     raise Exception("status code invalid !")
     
-    await current_order.set({"status" : request_data.status})
-    await current_order.save()
+    # if (request_data.status == "active" and current_order.status == "expired"):
+    #     await current_order.set({"order_date" : datetime.datetime.now()+datetime.timedelta(minutes=30)})
     
     return current_order.status
 #----------------------------------------------------------------------------
@@ -609,3 +620,22 @@ async def set_expired_order():
     expired_order = Order.find({"status" : "active" ,"order_date": {"$lt": datetime.datetime.now()}})
     await expired_order.update_many({}, {"$set" : {"status" : "expired"}})
 #--------------------------------------------------------------------------------------------------
+
+
+#-------------------------[get total bill by order id]-----------------------------\
+async def do_get_total_bill_order_by_order_id(order_id : str):
+    current_order = await Order.find_one(Order.id == ObjectId(order_id))
+    result = TotalBillSchema(info=[], total_price=0)
+    for item in current_order.item_list:
+        current_item = BillDetailSchema(username=item.created_by,
+                                        foodname=item.food,
+                                        quantity=item.quantity,
+                                        final_price=item.price * item.quantity
+                                        )
+        result.info.append(current_item)
+        result.total_price = result.total_price + current_item.final_price
+
+
+    return result
+
+#----------------------------------------------------------------------------------/
