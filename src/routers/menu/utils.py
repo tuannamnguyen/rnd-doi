@@ -499,6 +499,8 @@ async def do_delete_item_by_id(item_id : str, current_user : str):
         raise Exception("not Item's orderer !")
     
     item_in_order = await Order.find_one(Order.id == ObjectId(current_item.order_id))
+    if item_in_order.status != "active":
+        raise Exception("Order's topic closed")
     order_item_list = item_in_order.item_list
 
     pos = [data.item_detail_id for data in order_item_list].index(item_id)

@@ -158,7 +158,7 @@ async def get_menu_image(request_data: GetMenuImageSchema):
     "/add_new_item_old_v2", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str = Depends(get_current_user)):
-    set_expired_order()
+    await set_expired_order()
     result = await add_new_item_to_order_by_id(request_data, current_user)
     return {"data": [result]}
 
@@ -166,7 +166,7 @@ async def add_new_item(request_data: AddNewItemByOrderIDSchema, current_user:str
     "/add_new_item_old_v1", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def add_new_item(request_data: AddNewItemSchema):
-    set_expired_order()
+    await set_expired_order()
     result = await add_new_item_to_order(request_data)
     return {"data": [result]}
 
@@ -263,7 +263,7 @@ async def get_food(menu_title : str):
 
 @menu_router.post("/add_new_item", dependencies=[Depends(jwt_validator)], response_model=ApiResponse)
 async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends(get_current_user)):
-    set_expired_order()
+    await set_expired_order()
     result = await add_new_item_v3(current_user, request_data)
 
     return {"data" : [result]}
