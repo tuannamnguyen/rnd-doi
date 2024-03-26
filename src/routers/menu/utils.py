@@ -488,6 +488,34 @@ async def add_new_item_v3(current_user : str, request_data : AddNewItemSchemaV3)
     
 #-------------------------------------------------------------
 
+
+#-------------------[Delete Item By Id]-------------------
+async def do_delete_item_by_id(item_id : str, current_user : str):
+    current_item = await ItemOrder.find_one(ItemOrder.id == ObjectId(item_id))
+    if not current_item:
+        raise Exception("Item not Found !")
+    
+    if current_item.created_by != current_user:
+        raise Exception("not Item's orderer !")
+    
+    item_in_order = await Order.find_one(Order.id == ObjectId(current_item.order_id))
+    order_item_list = item_in_order.item_list
+
+    pos = [data.item_detail_id for data in order_item_list].index(item_id)
+    order_item_list.pop(pos)
+
+  
+
+    item_in_order.item_list = order_item_list
+    await item_in_order.save()
+
+    await current_item.delete()
+
+#---------------------------------------------------------
+
+
+
+
 #-------------[Do get order by id]----------------------------
 
 async def do_get_order_by_id(order_id : str):
@@ -574,7 +602,7 @@ async def update_order_status(request_data : UpdateOrderStatusSchema, current_us
     return current_order.status
 #----------------------------------------------------------------------------
 
-#-------------------------------[set expired Order]---------------------------------------
+#-------------------------------[set expired Order]-----------------------------------------------
 async def set_expired_order():
     expired_order = Order.find({"status" : "active" ,"order_date": {"$lt": datetime.datetime.now()}})
     await expired_order.update_many({}, {"$set" : {"status" : "expired"}})

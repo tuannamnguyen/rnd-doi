@@ -32,7 +32,8 @@ from src.routers.menu.utils import (
     get_order_created, get_order_joined,
     get_user_image_by_order_id,
     update_order_status,
-    set_expired_order
+    set_expired_order,
+    do_delete_item_by_id
     # get_food_by_menu_from_order
 )
 
@@ -189,6 +190,22 @@ async def delete_order_by_title(title: str) -> dict:
     if order is not None:
         await order.delete()
         return order.model_dump()
+    
+
+@menu_router.delete(
+    "/delete_item/{item_id}",
+    dependencies=[Depends(jwt_validator)],
+     response_model=ApiResponse,
+)
+async def delete_item_by_id(item_id: str, current_user:str = Depends(get_current_user)):
+        try:
+
+            await do_delete_item_by_id(item_id=item_id, current_user=current_user)
+
+        except Exception as e:
+            return {"success" : False, "error" : str(e)}
+        
+        return {"data" : []}
     
 
 @menu_router.get(
