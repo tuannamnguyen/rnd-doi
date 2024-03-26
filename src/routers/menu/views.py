@@ -33,7 +33,9 @@ from src.routers.menu.utils import (
     get_user_image_by_order_id,
     update_order_status,
     set_expired_order,
-    do_delete_item_by_id
+    do_delete_item_by_id,
+    do_delete_order_by_id_v2,
+    do_get_total_bill_order_by_order_id
     # get_food_by_menu_from_order
 )
 
@@ -181,7 +183,7 @@ async def delete_menu_by_title(title: str) -> dict:
 
 
 @menu_router.delete(
-    "/delete_order/{title}",
+    "/delete_order_v1/{title}",
     dependencies=[Depends(jwt_validator)],
     status_code=status.HTTP_200_OK,
 )
@@ -190,7 +192,20 @@ async def delete_order_by_title(title: str) -> dict:
     if order is not None:
         await order.delete()
         return order.model_dump()
+#--------------------[delete order by id - v2]----------------------    
+@menu_router.delete(
+    "/delete_order/{order_id}",
+    dependencies=[Depends(jwt_validator)],
+     response_model=ApiResponse
+)
+async def delete_order_by_id(order_id: str, current_user:str = Depends(get_current_user)):
+    try:
+        await do_delete_order_by_id_v2(order_id, current_user)
+    except Exception as e:
+        return {"success" : False, "error" : str(e)}
     
+    return {"data" : []}
+#--------------------------------------------------------------------    
 
 @menu_router.delete(
     "/delete_item/{item_id}",
@@ -220,7 +235,7 @@ async def routing_get_user_image_by_order_id(order_id : str):
     
     return {"data": [result]}
 
-@menu_router.post(
+@menu_router.put(
         "/update_order/status/", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
 )
 async def routing_update_order_status(request_data : UpdateOrderStatusSchema, current_user:str = Depends(get_current_user)):
@@ -273,6 +288,20 @@ async def add_food(request_data : AddNewItemSchemaV3, current_user:str = Depends
 async def show_food_image(request_data : GetFoodImageSchema):
     result = await get_image_of_menu(request_data.image_url)
     return {"data": [result]}
-
-
 #-------------------------------------------------------------------
+
+#-------------------------------[GET PAYMENT INFOMATION UPDATE]-----------------------------------
+
+@menu_router.get(
+    "/get_user_order/{order_id}/total_bill", dependencies=[Depends(jwt_validator)], response_model=ApiResponse
+)
+async def get_total_bill_order_by_order_id(order_id : str):
+    try:
+        result = await do_get_total_bill_order_by_order_id(order_id)
+    except Exception as e:
+        return {"success" : False, "error" : str(e)}
+    
+    return {"data" : [result]}
+    
+
+
