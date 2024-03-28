@@ -15,7 +15,9 @@ from src.schemas.order import (
     AddNewItemByOrderIDSchema,
     CreateItemSchema,
     UpdateOrderStatusSchema,
-    TotalBillSchema, BillDetailSchema
+    TotalBillSchema, BillDetailSchema,
+    FoodDetailSchema, TotalFoodSchema
+    
 )
 from src.schemas.food import (
     food_schema,
@@ -417,6 +419,28 @@ async def get_my_order(current_user : str):
 
     return sorted_result
 
+#------------------------[get order by - order's owner & order's participants]--------------------------\
+async def get_my_order_expired(current_user : str):
+    result= []
+    order_list = Order.find({"created_by" : current_user, "status" : "expired"})
+    async for data in order_list:
+        result.append(data.model_dump())
+
+    order_list2 = Order.find({"created_by" : {"$ne": current_user}, "status" : "expired"})
+    async for data in order_list2:
+        dup_list = []
+        item_list : Item = []
+        item_list = data.item_list
+        for item_data in item_list:
+            if item_data.created_by == current_user:
+                result.append(data.model_dump())
+                break
+
+    sorted_result = sorted(result, key=itemgetter('created_at'), reverse=True)
+
+
+    return sorted_result
+
 
 async def get_order_created(current_user : str):
     result= []
@@ -625,6 +649,9 @@ async def set_expired_order():
 #-------------------------[get total bill by order id]-----------------------------\
 async def do_get_total_bill_order_by_order_id(order_id : str):
     current_order = await Order.find_one(Order.id == ObjectId(order_id))
+    if not current_order:
+        raise Exception("current order not found !")
+    
     result = TotalBillSchema(info=[], total_price=0)
     for item in current_order.item_list:
         current_item = BillDetailSchema(username=item.created_by,
@@ -635,6 +662,58 @@ async def do_get_total_bill_order_by_order_id(order_id : str):
         result.info.append(current_item)
         result.total_price = result.total_price + current_item.final_price
 
+    return result
+
+#----------------------------------------------------------------------------------/
+
+#-------------------------[get total Food bill by order id]-----------------------------\
+async def do_get_food_bill_order_by_order_id(order_id : str):
+    all_item = ItemOrder.find(ItemOrder.order_id==order_id)
+    if not all_item:
+        raise Exception("current order not found !")
+    
+    result = TotalFoodSchema(info=[], total_price=0)
+    dupfood= []
+    async for data in all_item:
+        if data.food not in dupfood:
+            result.info.append(FoodDetailSchema(
+                food_name=data.food,
+                price=data.price,
+                quantity=data.quantity,
+                note=[data.note],
+                final_price=data.price*data.quantity
+            ))
+            result.total_price = result.total_price + (data.price*data.quantity)
+            dupfood.append(data.food)
+        else:
+            pos = [x.food_name for x in result.info].index(data.food)
+            result.info[pos].quantity = result.info[pos].quantity + data.quantity
+            if data.note != "":
+                result.info[pos].note.append(data.note)
+            result.info[pos].final_price = result.info[pos].final_price + result.info[pos].price * data.quantity
+            result.total_price = result.total_price + (result.info[pos].price * data.quantity)
+
+    return result
+#---------------------------------------------------------------------------------------/
+
+
+
+#-------------------------[get total bill by order id]-----------------------------\
+async def do_get_personal_bill_order_by_order_id_and_username(order_id : str, username : str):
+    current_order = await Order.find_one(Order.id == ObjectId(order_id), Order.created_by == username)
+
+    if not current_order:
+        raise Exception("current order not found !")
+    
+    result = TotalBillSchema(info=[], total_price=0)
+    for item in current_order.item_list:
+        current_item = BillDetailSchema(username=item.created_by,
+                                        foodname=item.food,
+                                        quantity=item.quantity,
+                                        final_price=item.price * item.quantity
+                                        )
+        result.info.append(current_item)
+        result.total_price = result.total_price + current_item.final_price
 
     return result
 
